@@ -2,6 +2,20 @@
 
 **Shared by:** Quốc Anh (CNN) & Tấn Lộc (ResNet50)
 
+## Setup môi trường
+
+```bash
+cd model-service
+
+# Tạo môi trường ảo
+python -m venv venv
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate   # Windows
+
+# Cài packages
+pip install -r requirements.txt
+```
+
 ## Cấu trúc
 
 ```
@@ -95,7 +109,12 @@ Response:
 ## Run local
 ```bash
 cd model-service
-pip install -r requirements.txt
+
+# Kích hoạt môi trường ảo
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate   # Windows
+
+# Run Flask
 python app/app.py
 # Server: http://localhost:5000
 ```

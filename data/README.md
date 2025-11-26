@@ -2,6 +2,22 @@
 
 **Owner:** Quang Duy | **Deadline:** 04/12/2025
 
+## Setup Môi trường Python
+
+```bash
+# Tạo môi trường ảo
+python -m venv venv
+
+# Kích hoạt môi trường ảo
+# macOS/Linux:
+source venv/bin/activate
+# Windows:
+# venv\Scripts\activate
+
+# Cài packages
+pip install -r requirements.txt
+```
+
 ## Download Dataset
 
 **Nguồn:** [Kaggle - Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia)

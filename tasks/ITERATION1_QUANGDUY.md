@@ -8,6 +8,15 @@
 
 ### Ngày 1-2 (27-28/11): Download & Inspection
 
+- [ ] Setup môi trường Python
+  ```bash
+  cd data
+  python -m venv venv
+  source venv/bin/activate  # macOS/Linux
+  # venv\Scripts\activate   # Windows
+  pip install -r requirements.txt
+  ```
+
 - [ ] Download dataset từ Kaggle
   ```bash
   kaggle datasets download -d paultimothymooney/chest-xray-pneumonia

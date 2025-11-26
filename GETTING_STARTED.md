@@ -62,9 +62,14 @@ cd DigitalImageProcessingProject
 # Tạo branch cho mình
 git checkout -b feature/data-preprocessing
 
-# Cài Python packages
+# Setup môi trường Python
 cd data
-pip install -r requirements.txt  # (sẽ tạo sau)
+python -m venv venv
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate   # Windows
+
+# Cài packages
+pip install -r requirements.txt
 ```
 
 **Bước 2: Download dataset**
@@ -489,8 +494,10 @@ git push origin feature/ten-feature
 
 ### Không commit những file này:
 - `data/raw/*` - Dataset gốc (quá lớn)
+- `data/processed/*` - Dataset đã xử lý (quá lớn)
 - `models/*.h5` - Models (quá lớn, dùng Git LFS hoặc Google Drive)
-- `node_modules/` - Dependencies
+- `node_modules/` - Node.js dependencies
+- `venv/`, `env/` - Python virtual environment
 - `.env` - Environment variables
 - `__pycache__/` - Python cache
 
