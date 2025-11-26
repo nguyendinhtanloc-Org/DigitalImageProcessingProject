@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Python Model Service
+  model-service:
+    build:
+      context: ../model-service
+      dockerfile: Dockerfile
+    container_name: pneumonia-model-service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../models:/app/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - pneumonia-network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: pneumonia-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - MODEL_SERVICE_URL=http://model-service:5000
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      model-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - pneumonia-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: pneumonia-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - pneumonia-network
+
+networks:
+  pneumonia-network:
+    driver: bridge
