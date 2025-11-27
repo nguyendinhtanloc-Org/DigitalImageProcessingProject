@@ -1,103 +1,213 @@
 # Iteration 2 - Quang Duy (04/12 - 11/12)
 
-**Mục tiêu:** Spring Boot API hoàn chỉnh
+**Mục tiêu:** Setup Streamlit Multi-Page App với Advanced Features
 
 ---
 
-## Checklist
+## Tasks Overview
 
-### Ngày 1-2 (04-05/12): Project Setup
-
-- [ ] Init Spring Boot project
-  - Spring Web
-  - Spring Boot DevTools
-  - Lombok
-  - Springdoc OpenAPI (Swagger)
-
-- [ ] Tạo package structure:
-  ```
-  com.pneumonia/
-  ├── controller/
-  ├── service/
-  ├── dto/
-  ├── config/
-  └── exception/
-  ```
-
-- [ ] Config `application.properties`:
-  - Server port: 8080
-  - CORS settings
-  - File upload max size: 10MB
-  - Model service URL: http://localhost:5000
-
-### Ngày 3-4 (06-07/12): Core API Development
-
-- [ ] Tạo DTOs:
-  - `PredictionRequest.java`
-  - `PredictionResponse.java`
-
-- [ ] Tạo `ModelClientService.java`:
-  - Call Python Flask API
-  - Handle HTTP requests
-  - Parse JSON response
-
-- [ ] Tạo `PredictionController.java`:
-  - `POST /api/predict/cnn`
-  - `POST /api/predict/resnet50`
-  - Validate file upload
-  - Return JSON response
-
-### Ngày 5-6 (08-10/12): Testing & Swagger
-
-- [ ] Setup Swagger UI
-  - Config `SwaggerConfig.java`
-  - Add API documentation annotations
-
-- [ ] Test với Postman:
-  - Upload ảnh test
-  - Verify response format
-  - Test error cases (file quá lớn, sai format)
-
-- [ ] Exception handling:
-  - `GlobalExceptionHandler.java`
-  - Custom error responses
-
-### Ngày 7 (11/12): Polish & Documentation
-
-- [ ] Code cleanup
-- [ ] Write API documentation
-- [ ] Test integration với Frontend (mock)
-- [ ] Commit code
-- [ ] **Demo API cho team**
+### Task 1: Multi-Page App Structure (Day 1-2)
+### Task 2: CSS & UI Components (Day 2-3)
+### Task 3: Model Performance Dashboard (Day 4-5)
+### Task 4: Grad-CAM Visualization (Day 5-6)
+### Task 5: Image Enhancement Tools (Day 6-7)
+### Task 6: Documentation & Testing (Day 7)
 
 ---
 
-## API Endpoints
+## Task 1: Multi-Page App Structure
 
+**Setup môi trường và cấu trúc app**
+
+Steps:
+1. Setup Python environment:
 ```bash
-POST /api/predict/cnn
-POST /api/predict/resnet50
-GET /actuator/health
-GET /swagger-ui.html
+cd app
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
+2. Tạo cấu trúc multi-page:
+```
+app/
+├── app.py                    # Main page
+├── pages/
+│   ├── 1_Model_Performance.py
+│   ├── 2_Grad-CAM_Visualization.py
+│   └── 3_Image_Enhancement.py
+├── utils/
+│   ├── __init__.py
+│   ├── ui_components.py
+│   ├── visualization.py
+│   └── image_processing.py
+└── static/
+    └── styles.css
+```
+
+3. Test navigation:
+```bash
+streamlit run app.py
+# Check sidebar shows all pages
+```
+
+Deliverables:
+- [ ] Folder structure complete
+- [ ] All pages accessible
+- [ ] Navigation working
+
 ---
 
-## Output Deliverables
+## Task 2: CSS & UI Components
 
-- Spring Boot API chạy port 8080
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- Test passed với Postman
+**Tạo custom styling và reusable components**
+
+Implement:
+1. `static/styles.css`:
+   - Main layout
+   - Prediction cards (green/red)
+   - Responsive design
+   - Buttons, progress bars
+
+2. `utils/ui_components.py`:
+   - `load_css()` - Load external CSS
+   - `render_header()` - App header
+   - `render_prediction_card()` - Results display
+   - `render_footer()` - Footer
+   - `show_info_box()` - Info/warning boxes
+
+3. Update `app.py` to use components
+
+Testing:
+```bash
+streamlit run app.py
+# Check CSS loaded
+# Test UI components render
+```
+
+Deliverables:
+- [ ] External CSS working
+- [ ] UI components functional
+- [ ] Clean, professional UI
 
 ---
 
-## Notes
+## Task 3: Model Performance Dashboard
 
-- Backend GỌI Python Flask API (không load model trực tiếp)
-- Temp uploads folder tự động cleanup
-- CORS config cho frontend localhost:5173
+**Tạo dashboard so sánh models**
+
+Implement `pages/1_Model_Performance.py`:
+- 3 tabs: Training History, Metrics, Confusion Matrix
+- Training curves (accuracy/loss)
+- Comparison table (CNN vs ResNet)
+- Metrics cards (Accuracy, Precision, Recall, F1)
+
+Implement `utils/visualization.py`:
+- `plot_training_history()` - Charts
+- `create_comparison_table()` - HTML table
+- `create_metrics_cards()` - Metrics display
+
+Use mock data initially
+
+Deliverables:
+- [ ] Performance dashboard complete
+- [ ] All charts working
+- [ ] Comparison table functional
 
 ---
 
-**Status:** TODO → DOING → DONE ✓  
-**Next:** Iteration 3 - Optimization & Bug fixes
+## Task 4: Grad-CAM Visualization
+
+**Visualize vùng model chú ý**
+
+Implement `pages/2_Grad-CAM_Visualization.py`:
+- Upload image interface
+- Generate heatmap
+- 3-column layout: Original, Heatmap, Overlay
+- Interpretation guide
+
+Implement trong `utils/visualization.py`:
+- `generate_gradcam_heatmap()` - Create heatmap
+- `overlay_heatmap_on_image()` - Overlay viz
+
+Features:
+- Auto-detect last conv layer
+- Red = high attention areas
+- Support CNN & ResNet-50
+
+Deliverables:
+- [ ] Grad-CAM page working
+- [ ] Heatmap generation functional
+- [ ] Overlay working
+
+---
+
+## Task 5: Image Enhancement Tools
+
+**Preprocessing tools cho X-ray images**
+
+Implement `pages/3_Image_Enhancement.py`:
+- Brightness/Contrast sliders
+- CLAHE checkbox (recommended for X-rays)
+- Denoising with strength control
+- Sharpness adjustment
+- Before/After comparison
+- Download button
+
+Implement `utils/image_processing.py`:
+- `adjust_brightness/contrast/sharpness()`
+- `apply_clahe()` - X-ray enhancement
+- `denoise_image()` - Noise removal
+- `preprocess_xray()` - Complete pipeline
+
+Deliverables:
+- [ ] Enhancement page complete
+- [ ] All filters working
+- [ ] Download function works
+
+---
+
+## Task 6: Documentation & Testing
+
+**Hoàn thiện docs và testing**
+
+Documentation:
+1. Update `app/README.md`:
+   - Multi-page structure
+   - Features list
+   - Setup guide
+
+2. Create `app/MULTIPAGE_GUIDE.md`:
+   - How multi-page works
+   - Navigation structure
+
+3. Create `app/static/CSS_GUIDE.md`:
+   - CSS customization guide
+
+Testing:
+- [ ] Test all pages
+- [ ] Test navigation
+- [ ] Test with/without models
+- [ ] Responsive design check
+- [ ] Browser compatibility
+
+Deliverables:
+- [ ] Complete documentation
+- [ ] All features tested
+- [ ] README updated
+
+---
+
+## Final Checklist
+
+- [ ] Multi-page app structure
+- [ ] Custom CSS & UI components
+- [ ] Model Performance dashboard
+- [ ] Grad-CAM visualization
+- [ ] Image Enhancement tools
+- [ ] Complete documentation
+- [ ] All features tested
+
+---
+
+**Next:** Iteration 3 - Deployment & Final Polish

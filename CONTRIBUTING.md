@@ -1,15 +1,510 @@
 # Hướng dẫn đóng góp cho dự án
 
-Cảm ơn bạn đã quan tâm đến dự án! Tài liệu này sẽ hướng dẫn cách làm việc hiệu quả với team.
+Cảm ơn bạn đã quan tâm đến dự án Pneumonia Detection! Tài liệu này sẽ hướng dẫn cách làm việc hiệu quả với team.
 
-##  Mục lục
+## Mục lục
 
 - [Git Workflow](#git-workflow)
 - [Branching Strategy](#branching-strategy)
 - [Commit Guidelines](#commit-guidelines)
 - [Pull Request Process](#pull-request-process)
 - [Code Style](#code-style)
-- [Code Review](#code-review)
+- [Development Setup](#development-setup)
+
+---
+
+## Git Workflow
+
+### Bước 1: Clone Repository
+
+```bash
+# Clone repository
+git clone https://github.com/nguyendinhtanloc-Org/DigitalImageProcessingProject.git
+cd DigitalImageProcessingProject
+```
+
+### Bước 2: Đồng bộ code mới nhất
+
+```bash
+# Chuyển về develop
+git checkout develop
+
+# Lấy code mới nhất
+git pull origin develop
+```
+
+### Bước 3: Tạo branch mới cho tính năng
+
+```bash
+# Tạo branch từ develop
+git checkout -b feature/ten-tinh-nang
+
+# Hoặc cho bugfix
+git checkout -b fix/ten-bug
+```
+
+### Bước 4: Commit code
+
+```bash
+# Thêm files đã thay đổi
+git add .
+
+# Commit với message rõ ràng (KHÔNG dùng emojis/icons)
+git commit -m "Add Grad-CAM visualization for model interpretability"
+```
+
+### Bước 5: Push và tạo Pull Request
+
+```bash
+# Push lên origin
+git push origin feature/ten-tinh-nang
+
+# Sau đó tạo Pull Request trên GitHub
+```
+
+---
+
+## Branching Strategy
+
+Dự án sử dụng **Git Flow** đơn giản với các loại branch sau:
+
+### Branch chính
+
+- **`main`**: Code production, stable
+  - Chỉ merge từ `develop` khi release
+  - Không commit trực tiếp vào branch này
+
+- **`develop`**: Branch development chính
+  - Tất cả features được merge vào đây
+  - Code luôn ở trạng thái có thể chạy được
+
+### Branch phụ
+
+- **`feature/*`**: Phát triển tính năng mới
+  - Format: `feature/ten-tinh-nang`
+  - Ví dụ: `feature/image-enhancement`, `feature/model-performance-dashboard`
+  - Tạo từ: `develop`
+  - Merge vào: `develop`
+
+- **`fix/*`**: Sửa bug
+  - Format: `fix/ten-bug`
+  - Ví dụ: `fix/css-gradient-safari`, `fix/file-upload-validation`
+  - Tạo từ: `develop`
+  - Merge vào: `develop`
+
+- **`ui/*`**: Cải thiện UI/UX
+  - Format: `ui/component-name`
+  - Ví dụ: `ui/prediction-card-redesign`
+
+- **`docs/*`**: Cập nhật documentation
+  - Format: `docs/section-name`
+  - Ví dụ: `docs/readme-update`
+
+### Quy tắc đặt tên branch
+
+**Đúng:**
+```
+feature/gradcam-heatmap
+fix/macos-crash-issue
+ui/modern-prediction-cards
+docs/setup-guide
+```
+
+**Sai:**
+```
+upload-image           # Thiếu prefix
+feature/Upload_Image   # Sử dụng underscore và viết hoa
+fix-bug                # Không rõ ràng
+my-branch              # Không theo convention
+```
+
+---
+
+## Commit Guidelines
+
+### Format commit message
+
+**QUAN TRỌNG: KHÔNG sử dụng emojis/icons trong commit messages**
+
+Format: **`<subject>`** hoặc **`<type>: <subject>`**
+
+```
+Add HCMUTE logo and university branding to header
+Fix macOS TensorFlow crash with mutex lock error
+Update UI with modern gradient design
+Refactor prediction card component for better performance
+```
+
+### Các Type commit (optional)
+
+| Type | Mô tả | Ví dụ |
+|------|-------|-------|
+| `Add` | Thêm tính năng mới | `Add Grad-CAM visualization page` |
+| `Fix` | Sửa bug | `Fix CORS error on file upload` |
+| `Update` | Cập nhật code/docs | `Update README with setup instructions` |
+| `Refactor` | Refactor code | `Refactor CSS with variables` |
+| `Remove` | Xóa code/file | `Remove unused emojis from UI` |
+| `Improve` | Cải thiện performance/UX | `Improve prediction card animations` |
+
+### Subject (Mô tả)
+
+- Viết **chữ thường đầu câu**, không dấu chấm cuối
+- Sử dụng **thì hiện tại**: "Add" thay vì "Added"
+- Tối đa **72 ký tự**
+- Mô tả **rõ ràng** những gì đã làm
+- **KHÔNG dùng emojis** (🚀, ✨, 🎨, etc.)
+
+### Ví dụ commit message tốt
+
+```bash
+Add model performance comparison dashboard
+Fix TensorFlow import error on macOS
+Update styles.css with modern gradient theme
+Refactor ui_components for cleaner code
+Remove all emojis from application
+Improve responsive design for mobile devices
+Add HCMUTE university branding to footer
+```
+
+### Commit message có body (nếu cần)
+
+```bash
+git commit -m "Add Grad-CAM visualization feature
+
+- Create new page for Grad-CAM heatmaps
+- Implement overlay function for original image
+- Add interpretation guide section
+- Update navigation menu
+
+Closes #45"
+```
+
+---
+
+## Pull Request Process
+
+### 1. Chuẩn bị Pull Request
+
+**Trước khi tạo PR:**
+- Code đã chạy thành công local
+- Đã test trên browser (Chrome, Safari)
+- Code đã format đúng style
+- Đã commit với message rõ ràng
+- Branch đã sync với `develop` mới nhất
+- **KHÔNG có emojis trong code**
+
+```bash
+# Sync với develop
+git checkout develop
+git pull origin develop
+git checkout feature/your-feature
+git merge develop
+
+# Giải quyết conflicts nếu có
+# Sau đó push
+git push origin feature/your-feature
+```
+
+### 2. Tạo Pull Request
+
+**Title (KHÔNG dùng emojis):**
+```
+Add image enhancement tools with CLAHE and denoising
+```
+
+**Description template:**
+
+```markdown
+## Mô tả
+
+Thêm trang Image Enhancement với các công cụ tiền xử lý ảnh X-ray.
+
+## Thay đổi
+
+- Tạo page `3_Image_Enhancement.py`
+- Thêm brightness/contrast sliders
+- Implement CLAHE algorithm
+- Add denoising với adjustable strength
+- Download button cho enhanced images
+
+## Checklist
+
+- [x] Code chạy thành công local
+- [x] Đã test trên Chrome và Safari
+- [x] Đã format code theo PEP 8
+- [x] Không có emojis/icons trong code
+- [x] CSS responsive cho mobile
+- [ ] Cần review performance optimization
+
+## Related Issues
+
+Closes #23
+
+## Screenshots
+
+![Enhancement Tools](link-to-screenshot)
+```
+
+### 3. Review Process
+
+**Người tạo PR:**
+- Tự review code trước khi request review
+- Trả lời comments rõ ràng
+- Update code theo feedback
+- Resolve conversations khi đã fix
+
+**Reviewer:**
+- Review trong vòng **24 giờ**
+- Comment **constructive feedback**
+- Approve nếu code đạt yêu cầu
+- Request changes nếu cần sửa
+
+### 4. Merge Pull Request
+
+**Điều kiện để merge:**
+- Có ít nhất **1 approval** từ team member
+- Code đã được test kỹ
+- Không có **merge conflicts**
+- Không có emojis/icons trong code
+
+**Merge strategy:**
+- Sử dụng **"Squash and merge"** để giữ history sạch
+- Delete branch sau khi merge
+
+---
+
+## Code Style
+
+### Python (Streamlit App)
+
+**Style guide:** PEP 8
+
+```python
+# Đúng
+import streamlit as st
+from PIL import Image
+import numpy as np
+
+def render_prediction_card(prediction, confidence, model_name):
+    """
+    Render prediction result card with modern design
+    
+    Args:
+        prediction (str): "Normal" or "Pneumonia"
+        confidence (float): Confidence score (0-100)
+        model_name (str): Name of the model used
+    """
+    css_class = "normal" if prediction.upper() == "NORMAL" else "pneumonia"
+    
+    st.markdown(f"""
+    <div class="prediction-card {css_class}">
+        <div class="prediction-label">{prediction.upper()}</div>
+        <div class="confidence-badge">{confidence:.1f}% Confidence</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Sai
+def RenderCard(pred,conf):  # Naming không đúng
+    st.markdown(f"<div>🎉 {pred}</div>")  # Có emoji
+```
+
+**Convention:**
+- Function names: `snake_case`
+- Class names: `PascalCase`
+- Constants: `UPPER_SNAKE_CASE`
+- Variables: `snake_case`
+- **KHÔNG dùng emojis** trong code
+- Docstrings cho tất cả functions
+- Maximum line length: 88 characters (Black formatter)
+
+### CSS
+
+```css
+/* Đúng */
+:root {
+    --primary-color: #0066CC;
+    --success-color: #00C853;
+    --border-radius: 12px;
+}
+
+.prediction-card {
+    background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+/* Sai */
+.card {
+    background: #fff;  /* Nên dùng CSS variables */
+    padding: 20px;     /* Nên dùng rem */
+}
+```
+
+**Convention:**
+- Sử dụng CSS variables cho colors
+- Spacing với `rem` thay vì `px`
+- Class names: `kebab-case`
+- Group related properties
+- Comment cho các sections phức tạp
+
+### Markdown
+
+**Đúng:**
+```markdown
+## Setup Instructions
+
+### Requirements
+- Python 3.12+
+- pip packages listed in requirements.txt
+
+### Installation
+1. Create virtual environment
+2. Install dependencies
+3. Run application
+```
+
+**Sai:**
+```markdown
+## 🚀 Setup Instructions
+
+### ✅ Requirements
+- Python 3.12+ ⚡
+- pip packages 📦
+```
+
+**KHÔNG dùng emojis** trong:
+- Headings
+- List items
+- File names
+- Code comments
+
+---
+
+## Development Setup
+
+### Yêu cầu
+
+- Python 3.12 hoặc cao hơn
+- pip (Python package manager)
+- Git
+
+### Setup môi trường
+
+```bash
+# Di chuyển vào thư mục app
+cd app
+
+# Tạo virtual environment
+python3.12 -m venv venv
+
+# Kích hoạt venv
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate   # Windows
+
+# Cài dependencies
+pip install -r requirements.txt
+```
+
+### Chạy app local
+
+**macOS (Khuyến nghị):**
+```bash
+./run.sh
+```
+
+**Manual:**
+```bash
+# macOS
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+streamlit run app.py
+
+# Windows/Linux
+streamlit run app.py
+```
+
+App sẽ chạy tại: **http://localhost:8501**
+
+### Testing
+
+```bash
+# Test trên browser
+open http://localhost:8501
+
+# Test upload file
+# Test model selection
+# Test responsive design (DevTools > Toggle device toolbar)
+```
+
+---
+
+## Lưu ý quan trọng
+
+### DO
+
+- **Commit thường xuyên** với messages rõ ràng
+- **Test kỹ** trước khi push
+- **Sync với develop** thường xuyên
+- **Review code** của người khác
+- **Ask questions** nếu không rõ
+- **Format code** với Black (Python)
+- **Kiểm tra responsive** design
+
+### DON'T
+
+- **KHÔNG dùng emojis/icons** trong code, commits, hoặc PRs
+- **Không commit** code không chạy được
+- **Không push** trực tiếp vào `main` hoặc `develop`
+- **Không merge** PR của chính mình
+- **Không commit** files không cần thiết (venv/, __pycache__/, .DS_Store)
+- **Không hardcode** credentials hoặc API keys
+
+---
+
+## Project Structure
+
+```
+DigitalImageProcessingProject/
+├── app/                          # Streamlit application
+│   ├── app.py                    # Main page
+│   ├── pages/                    # Multi-page app
+│   │   ├── 1_Model_Performance.py
+│   │   ├── 2_Grad-CAM_Visualization.py
+│   │   └── 3_Image_Enhancement.py
+│   ├── utils/                    # Helper functions
+│   │   ├── ui_components.py
+│   │   ├── visualization.py
+│   │   └── image_processing.py
+│   ├── static/                   # CSS, images
+│   │   └── styles.css
+│   └── requirements.txt
+├── models/                       # Trained models (gitignored)
+├── notebooks/                    # Jupyter notebooks for training
+└── README.md
+```
+
+---
+
+## Resources
+
+- [PEP 8 - Python Style Guide](https://peps.python.org/pep-0008/)
+- [Streamlit Documentation](https://docs.streamlit.io/)
+- [Git Flow Workflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
+- [Black Code Formatter](https://black.readthedocs.io/)
+
+---
+
+## Team
+
+**Team Prompt Engineer**
+- Trường Đại học Sư phạm Kỹ thuật TP. Hồ Chí Minh (HCMUTE)
+- Môn học: Xử Lý Ảnh Số
+- Giảng viên: ThS. Đoàn Minh Trí
+
+---
+
+**Happy Coding!**
+
 
 ---
 

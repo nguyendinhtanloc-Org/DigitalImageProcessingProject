@@ -1,19 +1,18 @@
 # Iteration 1 - Quang Duy (27/11 - 04/12)
 
-**Mục tiêu:** Hoàn thành data preprocessing
+**Mục tiêu:** Data Preprocessing
 
 ---
 
 ## Checklist
 
-### Ngày 1-2 (27-28/11): Download & Inspection
+### Ngày 1-2 (27-28/11): Setup & Download
 
 - [ ] Setup môi trường Python
   ```bash
   cd data
   python -m venv venv
-  source venv/bin/activate  # macOS/Linux
-  # venv\Scripts\activate   # Windows
+  source venv/bin/activate
   pip install -r requirements.txt
   ```
 
@@ -21,17 +20,16 @@
   ```bash
   kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
   ```
+
 - [ ] Giải nén vào `data/raw/`
 - [ ] Chạy `01_data_inspection.py`
-- [ ] Viết báo cáo: `data/reports/data_inspection_report.md`
-  - Số lượng ảnh mỗi class
-  - Image size, format
-  - Ảnh bị lỗi/thiếu
+- [ ] Viết báo cáo inspection
 
 ### Ngày 3-4 (29-30/11): Cleaning & Preprocessing
 
 - [ ] Chạy `02_data_cleaning.py`
-  - Loại bỏ ảnh lỗi, trùng, sai format
+  - Loại bỏ ảnh lỗi, trùng
+
 - [ ] Chạy `03_preprocessing.py`
   - Resize: 224x224
   - Normalize: [0, 1]
@@ -41,38 +39,24 @@
 
 - [ ] Chạy `04_augmentation.py`
   - Rotation, flip, zoom, brightness
-  - Cân bằng class (PNEUMONIA nhiều hơn NORMAL)
+
 - [ ] Chạy `05_split_dataset.py`
   - Train: 80%, Val: 10%, Test: 10%
-  - Output: `data/processed/`
 
-### Ngày 7 (03-04/12): Verification & Handoff
+### Ngày 7 (03-04/12): Verification
 
-- [ ] Verify dataset cuối cùng
-  - Check số lượng ảnh từng folder
-  - Test load vài ảnh random
-- [ ] Viết báo cáo: `data/reports/preprocessing_report.md`
-- [ ] Commit code lên GitHub
-- [ ] **Bàn giao dataset cho Quốc Anh & Tấn Lộc**
+- [ ] Verify dataset
+- [ ] Viết báo cáo preprocessing
+- [ ] Commit code
+- [ ] Bàn giao dataset cho Quốc Anh & Tấn Lộc
 
 ---
 
-## Output Deliverables
+## Output
 
-- `data/processed/train/` - Dataset training
-- `data/processed/val/` - Dataset validation  
-- `data/processed/test/` - Dataset testing
-- `data/reports/preprocessing_report.md` - Báo cáo chi tiết
+- `data/processed/train/`, `val/`, `test/`
+- `data/reports/preprocessing_report.md`
 
 ---
 
-## Notes
-
-- Dataset raw KHÔNG commit (thêm vào `.gitignore`)
-- Chỉ commit scripts và reports
-- Chia sẻ processed data qua Google Drive nếu cần
-
----
-
-**Status:** TODO → DOING → DONE ✓  
-**Next:** Iteration 2 - Backend API
+**Next:** Iteration 2 - Setup Streamlit app
