@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 
 # Cấu hình đường dẫn
-RAW_DATA_PATH = "data/raw/chest_xray/train"  # Đứng từ folder scripts nhìn ra
+RAW_DATA_PATH = "./data/raw/chest_xray/train"  # Đứng từ folder scripts nhìn ra
 
 def inspect_image_sizes():
     print("--- BẮT ĐẦU KIỂM TRA KÍCH THƯỚC ẢNH ---")
