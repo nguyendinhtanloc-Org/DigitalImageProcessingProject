@@ -3,22 +3,16 @@ import cv2
 import numpy as np
 import shutil
 import random
-# Import hàm từ file utils cùng thư mục
 from utils import process_image_pipeline
 
-# --- CẤU HÌNH ---
-RAW_DATA_DIR = "data/raw/chest_xray"       
-PROCESSED_DATA_DIR = "data/processed"      
+RAW_DATA_DIR = "data/raw/chest_xray" 
+PROCESSED_DATA_DIR = "data/processed"
 
-# Các hàm Augmentation (Biến đổi)
 def do_rotate(image):
     rows, cols = image.shape
     angle = random.uniform(-10, 10)
     M = cv2.getRotationMatrix2D((cols/2, rows/2), angle, 1)
     return cv2.warpAffine(image, M, (cols, rows), borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-
-def do_flip(image):
-    return cv2.flip(image, 1)
 
 def do_zoom(image):
     zoom_factor = random.uniform(1.1, 1.2)
@@ -45,15 +39,19 @@ def do_sharpen(image):
     return cv2.filter2D(image, -1, kernel)
 
 TRANSFORMS = [
-    (do_rotate, "rot"), (do_flip, "flip"), (do_zoom, "zoom"),
-    (do_shift, "shift"), (do_blur, "blur"), (do_sharpen, "sharp")
+    (do_rotate, "rot"), 
+    (do_zoom, "zoom"),
+    (do_shift, "shift"), 
+    (do_blur, "blur"), 
+    (do_sharpen, "sharp")
 ]
 
 def main():
     if os.path.exists(PROCESSED_DATA_DIR):
+        print(f"Đang xóa dữ liệu cũ tại {PROCESSED_DATA_DIR}...")
         shutil.rmtree(PROCESSED_DATA_DIR)
 
-    for split in ['train', 'test', 'val']:
+    for split in ['train', 'val', 'test']:
         for category in ['NORMAL', 'PNEUMONIA']:
             os.makedirs(os.path.join(PROCESSED_DATA_DIR, split, category), exist_ok=True)
 
@@ -61,13 +59,16 @@ def main():
     categories = ['NORMAL', 'PNEUMONIA']
 
     print(f"Bắt đầu xử lý dữ liệu từ {RAW_DATA_DIR}...")
+    print("Chiến lược: Train (Cân bằng Normal/Pneumonia); Val/Test (Giữ nguyên)")
 
     for split in splits:
         for category in categories:
             src_path = os.path.join(RAW_DATA_DIR, split, category)
             dst_path = os.path.join(PROCESSED_DATA_DIR, split, category)
             
-            if not os.path.exists(src_path): continue
+            if not os.path.exists(src_path): 
+                print(f"[Bỏ qua] Không tìm thấy thư mục nguồn: {src_path}")
+                continue
 
             files = os.listdir(src_path)
             print(f"-> Đang xử lý: {split}/{category} ({len(files)} ảnh gốc)")
@@ -80,26 +81,35 @@ def main():
                     img = cv2.imread(file_src)
                     if img is None: continue
                     
-                    # 1. Làm sạch
                     clean_img = process_image_pipeline(img)
                     
-                    # 2. Lưu ảnh gốc sạch
                     cv2.imwrite(os.path.join(dst_path, file_name), clean_img)
                     
-                    # 3. Augmentation (Chỉ TRAIN)
                     if split == 'train':
                         base_name = os.path.splitext(file_name)[0]
                         ext = os.path.splitext(file_name)[1]
                         
-                        for func, suffix in TRANSFORMS:
+                        if category == 'NORMAL':
+                            selected_transforms = TRANSFORMS
+                        else: 
+                            selected_transforms = [t for t in TRANSFORMS if t[1] in ['rot', 'shift']]
+                        
+                        for func, suffix in selected_transforms:
                             aug_img = func(clean_img)
                             new_name = f"{base_name}_{suffix}{ext}"
                             cv2.imwrite(os.path.join(dst_path, new_name), aug_img)
                             
                 except Exception as e:
-                    print(f"Lỗi {file_name}: {e}")
+                    print(f"Lỗi xử lý file {file_name}: {e}")
 
-    print("\nHoàn tất! Dữ liệu đã được lưu tại data/processed")
+    print("\n=== HOÀN TẤT ===")
+    print(f"Dữ liệu đã sẵn sàng tại {PROCESSED_DATA_DIR}")
+    
+    # In thống kê sơ bộ
+    for split in splits:
+        n_norm = len(os.listdir(os.path.join(PROCESSED_DATA_DIR, split, 'NORMAL')))
+        n_pneu = len(os.listdir(os.path.join(PROCESSED_DATA_DIR, split, 'PNEUMONIA')))
+        print(f"- {split.upper()}: NORMAL={n_norm}, PNEUMONIA={n_pneu}")
 
 if __name__ == "__main__":
     main()
