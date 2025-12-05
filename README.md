@@ -44,11 +44,24 @@ Dự án **Pneumonia Detection** sử dụng Deep Learning để phân loại �
 ## Kiến trúc hệ thống
 
 ```
-┌─────────────┐      HTTP/REST      ┌──────────────┐      Python API     ┌─────────────┐
-│   ReactJS   │ ──────────────────> │ Spring Boot  │ ─────────────────> │   Models    │
-│  Frontend   │ <────────────────── │   Backend    │ <───────────────── │ (CNN/ResNet)│
-└─────────────┘      JSON Response  └──────────────┘     Prediction     └─────────────┘
+┌─────────────────────────────────────────────────────┐
+│                 Streamlit Web App                   │
+│   (Python + Streamlit + TensorFlow)                 │
+│                                                      │
+│   - Upload ảnh X-quang                              │
+│   - Chọn model (CNN / ResNet50)                     │
+│   - Hiển thị kết quả + Confidence                   │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│              Trained Models (local)                  │
+│   - models/cnn_best.h5                              │
+│   - models/resnet50_best.h5                         │
+└─────────────────────────────────────────────────────┘
 ```
+
+**Training:** Models được train trên Kaggle (GPU miễn phí)  
+**Inference:** Streamlit app chạy local (CPU đủ)
 
 ---
 
@@ -57,83 +70,47 @@ Dự án **Pneumonia Detection** sử dụng Deep Learning để phân loại �
 ```
 DigitalImageProcessingProject/
 │
-├── backend/                           # Spring Boot API - Quang Duy
-│   ├── src/main/java/com/pneumonia/
-│   │   ├── controller/               # API endpoints
-│   │   ├── service/                  # Business logic
-│   │   ├── dto/                      # Request/Response objects
-│   │   ├── config/                   # Configuration
-│   │   └── exception/                # Error handling
-│   ├── src/main/resources/
-│   ├── pom.xml
-│   ├── Dockerfile
-│   ├── README.md
-│   └── TASKS.md                      # Chi tiết công việc Quang Duy
-│
-├── frontend/                          # ReactJS - Quốc Anh & Tấn Lộc
-│   ├── src/
-│   │   ├── components/               # UI components
-│   │   ├── pages/                    # Pages
-│   │   ├── services/                 # API calls
-│   │   └── utils/                    # Helpers
-│   ├── package.json
-│   ├── Dockerfile
-│   ├── README.md
-│   └── TASKS.md                      # Chi tiết công việc Quốc Anh
-│
-├── model-service/                     # Python Flask API - Shared
-│   ├── app/
-│   │   ├── routes/                   # API endpoints
-│   │   ├── services/                 # Model inference
-│   │   └── utils/                    # Helpers
-│   ├── models/                       # Trained models (.h5)
-│   ├── requirements.txt
-│   ├── Dockerfile
+├── app/                              # Streamlit Web App
+│   ├── app.py                       # Main application
+│   ├── utils/                       # Helper functions
+│   ├── requirements.txt             # Python dependencies
 │   └── README.md
 │
-├── notebooks/                         # Jupyter notebooks - Kaggle
-│   ├── CNN.ipynb                     # Quốc Anh - CNN training
-│   ├── ResNet.ipynb                  # Tấn Lộc - ResNet50 training
-│   ├── evaluation/
-│   │   ├── CNN_evaluation.ipynb
-│   │   └── ResNet_evaluation.ipynb
-│   ├── comparison/
-│   │   └── Model_Comparison.ipynb    # Tấn Lộc - So sánh models
-│   └── README.md
-│
-├── data/                              # Dataset & Preprocessing - Quang Duy
-│   ├── preprocessing-scripts/        # Python scripts tiền xử lý
+├── data/                             # Dataset & Preprocessing - Quang Duy
+│   ├── raw/                         # Dataset gốc (KHÔNG commit)
+│   ├── processed/                   # Dataset đã xử lý (KHÔNG commit)
+│   ├── preprocessing-scripts/       # Python scripts
 │   │   ├── 01_data_inspection.py
 │   │   ├── 02_data_cleaning.py
 │   │   ├── 03_preprocessing.py
 │   │   ├── 04_augmentation.py
 │   │   └── 05_split_dataset.py
-│   ├── reports/                      # Báo cáo tiền xử lý
-│   │   ├── data_inspection_report.md
-│   │   └── preprocessing_report.md
-│   ├── README.md
-│   └── TASKS_QUANGDUY.md            # Chi tiết công việc
-│
-├── models/                            # Saved models
-│   ├── cnn_best.h5                   # Từ Quốc Anh
-│   ├── resnet50_best.h5              # Từ Tấn Lộc
+│   ├── reports/                     # Báo cáo preprocessing
+│   ├── requirements.txt
 │   └── README.md
 │
-├── deployment/                        # Docker deployment - Tấn Lộc
-│   ├── docker-compose.yml
-│   ├── nginx/
-│   │   └── nginx.conf
+├── notebooks/                        # Training Notebooks - Kaggle
+│   ├── CNN.ipynb                    # Quốc Anh - CNN training
+│   ├── ResNet.ipynb                 # Tấn Lộc - ResNet50 training
+│   └── Model_Comparison.ipynb       # Tấn Lộc - So sánh models
+│
+├── models/                           # Trained Models
+│   ├── cnn_best.h5                  # Từ Quốc Anh
+│   ├── resnet50_best.h5             # Từ Tấn Lộc
 │   └── README.md
 │
-├── docs/                              # Tài liệu
-│   ├── model_comparison_report.md    # Tấn Lộc
-│   ├── USER_GUIDE.md                 # Tấn Lộc
-│   ├── report.pdf                    # Báo cáo cuối
-│   └── slides.pptx                   # Thuyết trình
+├── tasks/                            # Task files theo iteration
+│   ├── ITERATION1_*.md
+│   ├── ITERATION2_*.md
+│   └── ITERATION3_*.md
+│
+├── docs/                             # Tài liệu
+│   └── model_comparison_report.md   # Tấn Lộc
 │
 ├── .gitignore
+├── GETTING_STARTED.md
+├── TIMELINE.md
 ├── CONTRIBUTING.md
-├── TASKS_TANLOC.md                   # Chi tiết công việc Tấn Lộc
 └── README.md
 ```
 
@@ -141,24 +118,21 @@ DigitalImageProcessingProject/
 
 ## Công nghệ sử dụng
 
-### Backend
-- **Java 17+**
-- **Spring Boot 3.x** (REST API)
-- **Maven** (Build tool)
-- **Swagger/OpenAPI** (API Documentation)
-
-### Frontend
-- **ReactJS 18.x**
-- **TailwindCSS** (Styling)
-- **Axios** (HTTP Client)
-- **Vite** (Build tool)
+### Web App
+- **Python 3.8+**
+- **Streamlit** (Web framework)
+- **TensorFlow/Keras** (Load & run models)
+- **Pillow, OpenCV** (Image processing)
 
 ### AI/ML
-- **Python 3.8+**
-- **TensorFlow/Keras** hoặc **PyTorch**
+- **TensorFlow/Keras** (Training)
+- **CNN** (Custom architecture)
 - **ResNet-50** (Transfer Learning)
-- **Grad-CAM** (Visualization)
 - **NumPy, Pandas, Matplotlib**
+
+### Training Platform
+- **Kaggle Notebooks** (GPU T4 x2 miễn phí)
+- **Jupyter Notebook** (Local development)
 
 ### Dataset
 - [Chest X-Ray Images (Pneumonia)](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia) từ Kaggle
@@ -169,12 +143,9 @@ DigitalImageProcessingProject/
 
 ### Prerequisites
 
-Đảm bảo bạn đã cài đặt:
-- **Java 17+** ([Download](https://www.oracle.com/java/technologies/downloads/))
-- **Maven 3.8+** ([Download](https://maven.apache.org/download.cgi))
-- **Node.js 18+** và **npm** ([Download](https://nodejs.org/))
-- **Python 3.8+** và **pip** ([Download](https://www.python.org/downloads/))
+- **Python 3.8+** ([Download](https://www.python.org/downloads/))
 - **Git** ([Download](https://git-scm.com/downloads))
+- **Kaggle Account** (để train models)
 
 ### Bước 1: Clone repository
 
@@ -185,44 +156,33 @@ cd DigitalImageProcessingProject
 
 ### Bước 2: Train Models trên Kaggle
 
-**Lưu ý:** Việc training models được thực hiện trên Kaggle Notebooks để tận dụng GPU miễn phí.
+**Training được thực hiện trên Kaggle (GPU miễn phí)**
 
-1. **Upload notebooks lên Kaggle:**
-   - Truy cập [Kaggle](https://www.kaggle.com/)
-   - Tạo notebook mới hoặc upload `notebooks/CNN.ipynb` và `notebooks/ResNet.ipynb`
+1. Upload `notebooks/CNN.ipynb` và `notebooks/ResNet.ipynb` lên Kaggle
+2. Add dataset: [Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia)
+3. Enable GPU: T4 x2
+4. Run training (~2-3 giờ mỗi model)
+5. Download models: `cnn_best.h5` và `resnet50_best.h5`
+6. Lưu vào thư mục `models/`
 
-2. **Thêm dataset:**
-   - Add dataset: [Chest X-Ray Pneumonia](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia)
-
-3. **Chạy training:**
-   - Bật GPU: Settings > Accelerator > GPU T4 x2
-   - Run all cells
-   - Training time: ~2-3 giờ cho mỗi model
-
-4. **Download trained models:**
-   - Sau khi train xong, download file `.h5` từ Kaggle
-   - Lưu vào thư mục `models/`
-
-### Bước 3: Setup Backend (Spring Boot)
+### Bước 3: Chạy Streamlit App
 
 ```bash
-cd backend
-mvn clean install
-mvn spring-boot:run
+cd app
+
+# Tạo môi trường ảo
+python -m venv venv
+source venv/bin/activate  # macOS/Linux
+# venv\Scripts\activate   # Windows
+
+# Cài packages
+pip install -r requirements.txt
+
+# Chạy app
+streamlit run app.py
 ```
 
-Backend sẽ chạy tại: `http://localhost:8080`  
-Swagger UI: `http://localhost:8080/swagger-ui.html`
-
-### Bước 4: Setup Frontend (ReactJS)
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend sẽ chạy tại: `http://localhost:5173`
+App sẽ mở tại: **http://localhost:8501**
 
 ---
 

@@ -1,64 +1,45 @@
 # Iteration 3 - Quang Duy (11/12 - 18/12)
 
-**Mục tiêu:** API Optimization & Support
+**Mục tiêu:** Deploy Streamlit
 
 ---
 
 ## Checklist
 
-### Ngày 1-2 (11-12/12): Bug Fixes từ Integration
+### Ngày 1-3 (11-13/12): Streamlit Cloud Deploy
 
-- [ ] Fix bugs phát hiện từ Tấn Lộc
-- [ ] Handle edge cases:
-  - File upload quá lớn
-  - Sai format
-  - Model service down
-  - Network timeout
+- [ ] Tạo account Streamlit Cloud
+- [ ] Connect GitHub repo
+- [ ] Deploy app
+- [ ] Test public URL
 
-- [ ] Improve error messages
-- [ ] Add retry logic khi call model service fail
+**Hoặc Deploy local:**
+- [ ] Document cách chạy local
+- [ ] Create deployment guide
+- [ ] Test trên máy khác
 
-### Ngày 3-4 (13-15/12): API Optimization
+### Ngày 4-5 (14-16/12): Polish & Fix
 
-- [ ] Add caching (optional):
-  - Cache predictions cho ảnh giống nhau
-  - Spring Cache abstraction
+- [ ] Fix bugs từ testing
+- [ ] Optimize performance
+- [ ] Add error handling
+- [ ] Improve UX
 
-- [ ] Optimize image processing:
-  - Resize before send to model service
-  - Compress if needed
+### Ngày 6-7 (17-18/12): Documentation
 
-- [ ] Add request logging:
-  - Log mỗi prediction request
-  - Log response time
-
-### Ngày 5-6 (16-17/12): Documentation & Testing
-
-- [ ] Complete Swagger documentation:
-  - Request/Response examples
-  - Error codes
-  - Authentication (nếu có)
-
-- [ ] Write API testing guide
-- [ ] Test full flow với Frontend
-- [ ] Performance testing
-
-### Ngày 7 (18/12): Final Polish
-
-- [ ] Code review & cleanup
-- [ ] Update README
-- [ ] Deployment notes
-- [ ] **Support team demo**
+- [ ] Update README.md
+- [ ] Write USER_GUIDE.md
+- [ ] Create demo video/screenshots
+- [ ] Prepare presentation
 
 ---
 
-## Output Deliverables
+## Output
 
-- Optimized API
-- Complete Swagger docs
-- API testing guide
-- Deployment ready
+- Streamlit app deployed/documented
+- User guide
+- Demo materials
 
 ---
 
-**Status:** TODO → DOING → DONE ✓
+**Next:** Final presentation

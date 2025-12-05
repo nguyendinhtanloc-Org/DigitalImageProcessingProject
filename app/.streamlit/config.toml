@@ -1,0 +1,14 @@
+[server]
+# Fix for macOS threading issues with TensorFlow
+enableCORS = false
+enableXsrfProtection = false
+
+[runner]
+# Prevent file watcher issues on macOS
+fastReruns = false
+magicEnabled = true
+
+[client]
+# Browser settings
+showErrorDetails = true
+toolbarMode = "minimal"

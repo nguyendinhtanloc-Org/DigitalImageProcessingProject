@@ -2,72 +2,76 @@
 
 > **Mới vào dự án?** Đọc [GETTING_STARTED.md](GETTING_STARTED.md) trước để biết bắt đầu từ đâu!
 
-## Iteration 1 (27/11 - 04/12): Data & Frontend Setup
+# Project Timeline & Tasks
 
-### Week 1: Data Collection & Basic UI
+> **Mới vào dự án?** Đọc [GETTING_STARTED.md](GETTING_STARTED.md) trước để biết bắt đầu từ đâu!
+
+## Iteration 1 (27/11 - 04/12): Data & Notebook Setup
+
+### Week 1: Data Collection & Training Prep
 
 | Task ID | Owner | Task | Chi tiết | Deadline |
 |---------|-------|------|----------|----------|
 | **i1w1** | Quang Duy | Data Collection | Thu thập dữ liệu từ Kaggle, loại bỏ ảnh lỗi/trùng/sai format | 29/11 |
 | **i1w2** | Quang Duy | Preprocessing | Resize 224x224, normalize, cải thiện chất lượng | 04/12 |
 | **i1w3** | Quang Duy | Augmentation & Split | Data augmentation, chia train/val/test | 04/12 |
-| **i1w4** | Quốc Anh | Website Skeleton | React + TailwindCSS: layout, upload form, result display | 04/12 |
-| **i1w5** | Tấn Lộc | JS Preview Logic | Preview ảnh, placeholder kết quả | 04/12 |
+| **i1w4** | Quốc Anh | CNN Notebook Setup | Chuẩn bị CNN.ipynb cho Kaggle training | 04/12 |
+| **i1w5** | Tấn Lộc | ResNet Notebook Setup | Chuẩn bị ResNet.ipynb cho Kaggle training | 04/12 |
 | **i1w6** | Quang Duy | Dataset Verification | Kiểm tra số lượng, format, bàn giao dataset | 04/12 |
 
 ### Deliverables
 - Dataset đã xử lý (train/val/test)
-- Frontend basic UI
+- CNN.ipynb sẵn sàng train
+- ResNet.ipynb sẵn sàng train
 - Báo cáo preprocessing
 
 ---
 
-## Iteration 2 (04/12 - 11/12): API & Models
+## Iteration 2 (04/12 - 11/12): Training & Streamlit App
 
-### Week 2: Backend API & Model Training
+### Week 2: Model Training & Web App Development
 
 | Task ID | Owner | Task | Chi tiết | Deadline |
 |---------|-------|------|----------|----------|
-| **i2w1** | Quang Duy | API Setup | Spring Boot API: `/predict/cnn`, `/predict/resnet50`, Swagger | 11/12 |
-| **i2w2** | Quốc Anh | CNN Training | Design CNN, train trên Kaggle, save model | 11/12 |
-| **i2w3** | Tấn Lộc | ResNet50 Fine-tune | Load pretrained, fine-tune, save model | 11/12 |
-| **i2w4** | Quang Duy | API Unit Test | Test với Postman, xử lý lỗi | 11/12 |
-| **i2w5** | Quốc Anh | React Components | Upload, preview, result display components với mock data | 11/12 |
+| **i2w1** | Quang Duy | Streamlit App Setup | Tạo app.py, custom UI/UX, CSS styling | 11/12 |
+| **i2w2** | Quốc Anh | CNN Training on Kaggle | Train CNN, tune hyperparameters, save model | 11/12 |
+| **i2w3** | Tấn Lộc | ResNet50 Training on Kaggle | Fine-tune ResNet50, save model | 11/12 |
+| **i2w4** | Quang Duy | Streamlit Model Loading | Load models, image preprocessing logic | 11/12 |
+| **i2w5** | Quốc Anh | CNN Model Optimization | Hyperparameter tuning, evaluation | 11/12 |
 
 ### Deliverables
-- Spring Boot API hoạt động
+- Streamlit app hoạt động
 - CNN model (.h5)
 - ResNet50 model (.h5)
-- React components với mock data
-- API documentation (Swagger)
+- Training reports (accuracy, loss curves)
 
 ---
 
-## Iteration 3 (11/12 - 18/12): Integration & Polish
+## Iteration 3 (11/12 - 18/12): Testing & Deployment
 
-### Week 3: Full Integration & Testing
+### Week 3: Model Comparison & Deployment
 
 | Task ID | Owner | Task | Chi tiết | Deadline |
 |---------|-------|------|----------|----------|
-| **i3w1** | Quốc Anh | Connect Frontend-API | React + Axios call Spring Boot API, hiển thị kết quả | 18/12 |
-| **i3w2** | Tấn Lộc | End-to-End Integration | Tích hợp full pipeline, fix bugs | 18/12 |
-| **i3w3** | Quang Duy | API Refinement | Tối ưu API, xử lý edge cases | 18/12 |
-| **i3w4** | Tấn Lộc + Quốc Anh | Model Comparison | So sánh CNN vs ResNet50, viết báo cáo | 18/12 |
-| **i3w5** | Quốc Anh | UI Polishing | Hoàn thiện UI/UX, responsive design | 18/12 |
-| **i3w6** | Quang Duy | Swagger Documentation | Hoàn thiện API docs | 18/12 |
+| **i3w1** | Quang Duy | Streamlit Deployment | Deploy lên Streamlit Cloud hoặc local | 18/12 |
+| **i3w2** | Quốc Anh | CNN Testing | Test cases, confusion matrix, evaluation | 18/12 |
+| **i3w3** | Tấn Lộc | ResNet50 Testing | Test cases, confusion matrix, evaluation | 18/12 |
+| **i3w4** | Tấn Lộc | Model Comparison | So sánh CNN vs ResNet50, viết báo cáo | 18/12 |
+| **i3w5** | Quang Duy | Documentation | User guide, deployment guide | 18/12 |
+| **i3w6** | All | Final Testing | End-to-end testing, bug fixes | 18/12 |
 
 ### Deliverables
-- Website hoạt động hoàn chỉnh
+- Deployed Streamlit app
 - Model comparison report
-- API documentation đầy đủ
 - Testing report
+- User documentation
 - Demo ready
 
 ---
 
 ## Chi tiết công việc từng người
 
-### Nguyễn Văn Quang Duy
+### Nguyễn Văn Quang Duy - Data & Deployment
 
 **Iteration 1 (27/11 - 04/12):**
 - [ ] Thu thập dataset từ Kaggle
@@ -79,76 +83,74 @@
 - [ ] Viết báo cáo preprocessing
 
 **Iteration 2 (04/12 - 11/12):**
-- [ ] Setup Spring Boot project
-- [ ] Tạo endpoints: `/predict/cnn`, `/predict/resnet50`
-- [ ] Xử lý upload ảnh
-- [ ] Gọi Python model service
-- [ ] Test API với Postman
-- [ ] Setup Swagger UI
+- [ ] Setup Streamlit app structure
+- [ ] Tạo UI với st.file_uploader, model selector
+- [ ] Custom CSS styling (green/red themes)
+- [ ] Load models với @st.cache_resource
+- [ ] Image preprocessing logic (resize, normalize)
+- [ ] Test app với mock models
 
 **Iteration 3 (11/12 - 18/12):**
-- [ ] Tối ưu API performance
-- [ ] Xử lý edge cases
-- [ ] Fix bugs từ integration
-- [ ] Hoàn thiện Swagger docs
-- [ ] Support team integration
+- [ ] Deploy lên Streamlit Cloud
+- [ ] Viết User Guide
+- [ ] Viết Deployment Guide
+- [ ] Fix bugs từ testing
+- [ ] Support team
 
 ---
 
-### Nguyễn Đặng Quốc Anh
+### Nguyễn Đặng Quốc Anh - CNN Model
 
 **Iteration 1 (27/11 - 04/12):**
-- [ ] Setup React + Vite + TailwindCSS
-- [ ] Tạo layout cơ bản (Header, Footer)
-- [ ] Component upload ảnh
-- [ ] Component hiển thị kết quả
-- [ ] Mock data testing
+- [ ] Setup Kaggle account
+- [ ] Chuẩn bị CNN.ipynb
+- [ ] Test notebook locally (không train)
+- [ ] Upload lên Kaggle, add dataset
+- [ ] Verify GPU access
 
 **Iteration 2 (04/12 - 11/12):**
-- [ ] Train CNN trên Kaggle
-- [ ] Save model (.h5)
+- [ ] Train CNN trên Kaggle (GPU T4 x2)
+- [ ] Hyperparameter tuning
+- [ ] Save model (cnn_best.h5)
 - [ ] Evaluation metrics
-- [ ] Tạo React components chính:
-  - UploadImage
-  - ResultDisplay
-  - ModelSelector
-- [ ] Test với mock API
+- [ ] Download model về local
+- [ ] Test với Streamlit app
 
 **Iteration 3 (11/12 - 18/12):**
-- [ ] Connect React với backend API
-- [ ] Handle loading states
-- [ ] Error handling
-- [ ] UI/UX polishing
-- [ ] Responsive design
+- [ ] CNN testing với test set
+- [ ] Confusion matrix
+- [ ] Error analysis
 - [ ] Model comparison (với Tấn Lộc)
 - [ ] Testing & bug fixing
 
 ---
 
-### Nguyễn Đình Tấn Lộc
+### Nguyễn Đình Tấn Lộc - ResNet50 & Comparison
 
 **Iteration 1 (27/11 - 04/12):**
-- [ ] Setup frontend preview logic
-- [ ] Image preview component
-- [ ] Placeholder kết quả
-- [ ] Chuẩn bị ResNet notebook
+- [ ] Setup Kaggle account
+- [ ] Chuẩn bị ResNet.ipynb
+- [ ] Test notebook locally
+- [ ] Upload lên Kaggle, add dataset
+- [ ] Verify GPU access
 
 **Iteration 2 (04/12 - 11/12):**
 - [ ] Fine-tune ResNet50 trên Kaggle
-- [ ] Save model (.h5)
+- [ ] Hyperparameter tuning
+- [ ] Save model (resnet50_best.h5)
 - [ ] Evaluation metrics
-- [ ] Chuẩn bị Python Flask service (nếu cần)
+- [ ] Download model về local
+- [ ] Test với Streamlit app
 
 **Iteration 3 (11/12 - 18/12):**
-- [ ] Tích hợp Frontend ↔ Backend
-- [ ] End-to-end testing
-- [ ] Fix bugs integration
+- [ ] ResNet50 testing với test set
+- [ ] Confusion matrix
 - [ ] So sánh CNN vs ResNet50:
   - Accuracy comparison
-  - Confusion matrices
-  - Training curves
+  - Training time
   - Inference time
-- [ ] Viết báo cáo comparison
+  - Confusion matrices
+- [ ] Viết báo cáo comparison (docs/model_comparison_report.md)
 - [ ] Final testing
 - [ ] Demo preparation
 
@@ -156,19 +158,18 @@
 
 ## Status Tracking
 
-### Iteration 1: ✓ In Progress (27/11 - 04/12)
-- Data Collection
-- Preprocessing
-- Frontend Setup
+### Iteration 1: In Progress (27/11 - 04/12)
+- Data Collection & Preprocessing
+- CNN/ResNet Notebook Setup
 
 ### Iteration 2: Waiting (04/12 - 11/12)
 - Chờ dataset từ Iteration 1
-- Backend API development
-- Model training
+- Model training on Kaggle
+- Streamlit app development
 
 ### Iteration 3: Waiting (11/12 - 18/12)
-- Chờ API & models từ Iteration 2
-- Integration & testing
+- Chờ models từ Iteration 2
+- Testing, comparison & deployment
 
 ---
 
@@ -196,16 +197,16 @@
 **Mục đích:** Sync progress, resolve blockers
 
 - **End of Week 1 (04/12):**
-  - Review dataset
-  - Review frontend UI
+  - Review dataset preprocessing
+  - Review CNN/ResNet notebooks
   - Plan Iteration 2
 
 - **End of Week 2 (11/12):**
-  - Demo API
-  - Demo models
-  - Plan integration
+  - Demo Streamlit app
+  - Demo trained models
+  - Plan testing & comparison
 
 - **End of Week 3 (18/12):**
   - Demo full system
   - Review comparison report
-  - Final preparation
+  - Final demo preparation
