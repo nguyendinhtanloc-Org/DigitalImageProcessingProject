@@ -2,7 +2,8 @@
 
 **Dự án:** Pneumonia Detection using Deep Learning
 **Người thực hiện:** Nguyễn Văn Quang Duy
-**Ngày cập nhật:** 27/11/2025
+**Ngày cập nhật:** 27/11/2024
+**Trạng thái:** Hoàn tất Iteration 1
 
 ---
 
@@ -11,84 +12,98 @@ Dữ liệu được sử dụng là tập ảnh **Chest X-Ray Images (Pneumonia
 - **Loại dữ liệu:** Ảnh X-quang lồng ngực (Grayscale).
 - **Nhãn (Labels):** 2 lớp
   - `NORMAL`: Phổi bình thường.
-  - `PNEUMONIA`: Viêm phổi (do vi khuẩn hoặc virus).
-- **Cấu trúc gốc:** Chia sẵn thành 3 tập `train`, `val`, `test`.
+  - `PNEUMONIA`: Viêm phổi.
+- **Vấn đề ban đầu:**
+    - Mất cân bằng dữ liệu nghiêm trọng (Pneumonia gấp 3 lần Normal).
+    - Tập Validation quá ít (16 ảnh).
+    - Chất lượng ảnh không đồng đều (ánh sáng, độ tương phản).
+    - Tồn tại ảnh trùng lặp (Duplicates) và ảnh lỗi (Outliers).
 
 ---
 
-## 2. Phân tích Dữ liệu (Exploratory Data Analysis - EDA)
+## 2. Quy trình Làm sạch & Tái cấu trúc (Cleaning & Resplit)
 
-Trước khi tiến hành xử lý, chúng tôi đã thực hiện các bước kiểm tra dữ liệu để đưa ra chiến lược phù hợp.
+Trước khi xử lý ảnh, chúng tôi đã thực hiện dọn dẹp dữ liệu thô:
 
-### 2.1. Phân bố kích thước ảnh
-- **Phương pháp:** Vẽ biểu đồ Scatter Plot giữa Chiều rộng (Width) và Chiều cao (Height).
-- **Quan sát:**
-  - Kích thước ảnh không đồng nhất, dao động lớn (từ ~400px đến >2500px).
-  - Đa số ảnh có tỷ lệ **Chiều rộng > Chiều cao** (ảnh chữ nhật ngang).
-  - Điểm dữ liệu nằm lệch xa so với đường chéo tỷ lệ 1:1 (hình vuông).
-- **Kết luận:** Việc Resize trực tiếp về hình vuông (ví dụ 224x224) sẽ gây méo ảnh (biến dạng lồng ngực), làm sai lệch đặc trưng hình học. Cần sử dụng phương pháp **Padding**.
+1.  **Loại bỏ Trùng lặp (De-duplication):** Sử dụng mã băm MD5 để phát hiện và xóa các ảnh trùng nhau trong cùng một tập.
+2.  **Loại bỏ Ngoại lai (Outlier Removal):** Dựa trên phân tích thống kê Histogram:
+    - Loại bỏ ảnh quá tối (`Mean Intensity < 40`).
+    - Loại bỏ ảnh quá sáng/lóa (`Mean Intensity > 220`).
+    - Loại bỏ ảnh lỗi tương phản (`Std Dev < 15`).
+3.  **Chia lại tập dữ liệu (Resplit):**
+    - Gộp tập `TRAIN` cũ và `VAL` cũ lại.
+    - Chia lại theo tỷ lệ chuẩn: **90% Train** - **10% Val**.
+    - **Tập TEST:** Giữ nguyên trạng từ Kaggle để đảm bảo tính khách quan khi đánh giá (Benchmark).
 
-### 2.2. Phân tích Histogram & Độ sáng
-- **Phương pháp:** So sánh Histogram trung bình của tập `NORMAL` và `PNEUMONIA`.
-- **Quan sát:** Hai đường biểu đồ Histogram gần như trùng khít nhau ở dải cường độ sáng (50-250).
-- **Kết luận:**
-  - Sự khác biệt giữa hai lớp không nằm ở độ sáng tổng thể (Global Intensity).
-  - Không thể chỉ dựa vào Cân bằng Histogram toàn cục (Global Histogram Equalization).
-  - Cần áp dụng kỹ thuật làm nổi bật đặc trưng cục bộ như **CLAHE**.
-
-### 2.3. Ảnh trung bình (Average Image)
-- **Phương pháp:** Cộng gộp và tính trung bình cộng pixel của toàn bộ ảnh trong mỗi lớp.
-- **Quan sát:** Ảnh trung bình của `PNEUMONIA` có độ "mờ đục" (whiter/cloudier) cao hơn ở vùng phổi so với `NORMAL`. Điều này phù hợp với đặc điểm y học của bệnh viêm phổi (hiện tượng đông đặc/thâm nhiễm phổi).
+**Kết quả phân bố sau khi làm sạch:**
+- Val set tăng từ 16 ảnh lên ~520 ảnh (Đủ tin cậy để đánh giá).
 
 ---
 
-## 3. Quy trình Tiền xử lý (Preprocessing Pipeline)
+## 3. Pipeline Tiền xử lý Nâng cao (Advanced Preprocessing Pipeline)
 
-Dựa trên kết quả phân tích, quy trình xử lý chuẩn áp dụng cho từng ảnh như sau:
+Đây là quy trình xử lý áp dụng cho **từng bức ảnh** (cả lúc Train và lúc chạy Web App) để tối ưu hóa đặc trưng bệnh lý.
 
-1.  **Chuyển đổi Grayscale:** Đưa tất cả ảnh về 1 kênh màu (nếu có ảnh RGB) để đồng nhất đầu vào.
-2.  **Resize with Padding (Quan trọng):**
-    - **Mục đích:** Giữ nguyên tỷ lệ khung hình (Aspect Ratio), tránh làm méo phổi.
-    - **Thực hiện:** Thu nhỏ ảnh sao cho cạnh lớn nhất bằng **256 pixel**. Phần dư thừa được điền màu đen (Padding value = 0).
-    - **Kích thước đích:** `256 x 256`.
-3.  **Cân bằng Histogram thích nghi (CLAHE):**
-    - **Tham số:** `clipLimit=2.0`, `tileGridSize=(8, 8)`.
-    - **Mục đích:** Tăng cường độ tương phản cục bộ, giúp làm rõ các chi tiết xương sườn và các đốm mờ viêm phổi mà không làm nhiễu ảnh như phương pháp cân bằng thông thường.
+### Bước 1: Grayscale Conversion
+- Chuyển tất cả ảnh về ảnh xám (1 kênh màu) để đồng nhất đầu vào.
+
+### Bước 2: Resize with Padding (Quan trọng)
+- **Kích thước đích:** `256 x 256`.
+- **Kỹ thuật:** Thay vì cắt (crop) hoặc kéo dãn (stretch), chúng tôi thêm viền đen (padding) vào cạnh ngắn hơn để biến ảnh thành hình vuông.
+- **Lý do:** Bảo toàn tỷ lệ hình học của tim và phổi, tránh làm méo mó cấu trúc giải phẫu.
+
+### Bước 3: Gaussian Blur (Denoising)
+- **Kỹ thuật:** Áp dụng bộ lọc làm mờ nhẹ (Kernel 3x3).
+- **Lý do:** Loại bỏ nhiễu hạt (noise) tần số cao trước khi đưa vào các bước tăng cường cạnh, tránh việc nhiễu bị khuếch đại.
+
+### Bước 4: Homomorphic Filtering (Miền tần số - Frequency Domain)
+- **Kỹ thuật:** Chuyển ảnh sang miền tần số (Fourier Transform), áp dụng bộ lọc thông cao (High-pass) kết hợp xử lý Logarithm.
+- **Tham số:** `gamma_L=0.5` (Giảm sáng nền), `gamma_H=1.5` (Tăng chi tiết cạnh).
+- **Lý do:**
+    - Khắc phục hiện tượng ánh sáng không đồng đều (Illumination correction).
+    - Làm sắc nét các cạnh xương và mô phổi.
+
+### Bước 5: CLAHE (Contrast Limited Adaptive Histogram Equalization)
+- **Kỹ thuật:** Cân bằng histogram thích nghi cục bộ.
+- **Tham số:** `ClipLimit=2.0`, `TileGridSize=(8,8)`.
+- **Lý do:** Làm nổi bật các đám mờ, thâm nhiễm (đặc trưng của viêm phổi) vốn có độ tương phản thấp so với nền xương.
 
 ---
 
 ## 4. Chiến lược Tăng cường Dữ liệu (Data Augmentation)
 
-Do số lượng ảnh gốc hạn chế (nguy cơ Overfitting) và mất cân bằng nhẹ, chúng tôi áp dụng **Offline Augmentation** (sinh ra file ảnh mới và lưu trữ) cho tập **TRAIN**.
+Để giải quyết vấn đề **Mất cân bằng dữ liệu (Class Imbalance)** trong tập Train, chúng tôi áp dụng chiến lược tăng cường có trọng số (Weighted Augmentation).
 
-Mỗi ảnh gốc trong tập Train sẽ sinh ra **6 biến thể** mới, bao gồm:
+**Chỉ áp dụng cho tập TRAIN:**
 
-1.  **Xoay (Rotation):** Ngẫu nhiên $\pm 10^{\circ}$.
-2.  **Lật (Horizontal Flip):** Lật ngang ảnh (mô phỏng thay đổi hướng chụp).
-3.  **Zoom:** Phóng to ngẫu nhiên 10-20% vào vùng trung tâm.
-4.  **Dịch chuyển (Shift):** Dịch sang các hướng tối đa 10%.
-5.  **Làm mờ (Gaussian Blur):** Kernel $3\times3$ hoặc $5\times5$ (Mô phỏng ảnh bị rung/mất nét).
-6.  **Làm nét (Sharpening):** Sử dụng Laplacian kernel để làm nổi bật cạnh và chi tiết xương.
+1.  **Lớp NORMAL (Thiểu số - Minor Class):**
+    - Áp dụng **Full Augmentation (x7)**: 1 ảnh gốc sinh ra 6 biến thể.
+    - Biến thể gồm: Xoay ($\pm 10^\circ$), Zoom (10-20%), Dịch chuyển (Shift), Làm mờ (Blur), Làm nét (Sharpen).
+    - **Mục đích:** Tăng số lượng ảnh Normal lên tối đa để bắt kịp Pneumonia.
 
-**Kết quả:** Tập dữ liệu Train tăng lên gấp **7 lần** (1 ảnh gốc + 6 ảnh biến thể), giúp mô hình học được tính bất biến (invariance) tốt hơn.
+2.  **Lớp PNEUMONIA (Đa số - Major Class):**
+    - Áp dụng **Partial Augmentation (x3)**: 1 ảnh gốc sinh ra 2 biến thể.
+    - Biến thể gồm: Chỉ Xoay và Dịch chuyển.
+    - **Mục đích:** Tăng nhẹ sự đa dạng nhưng kìm hãm số lượng để không lấn át Normal.
 
----
-
-## 5. Đặc tả Dữ liệu đầu ra (Output Specifications)
-
-Dữ liệu sau xử lý được lưu tại thư mục `data/processed/` và sẵn sàng để huấn luyện mô hình.
-
-*   **Format:** `.jpeg`
-*   **Color Space:** Grayscale (1 Channel).
-*   **Resolution:** `256 x 256`.
-*   **Lưu ý cho Team Model (Quốc Anh & Tấn Lộc):**
-    *   **CNN Model:** Input shape nên thiết lập là `(256, 256, 1)`.
-    *   **ResNet-50 Model:** ResNet yêu cầu 3 kênh màu. Khi load data, cần thực hiện bước lặp kênh: `np.stack((img,)*3, axis=-1)` hoặc cấu hình `ImageDataGenerator` để convert sang RGB.
-    *   **Data Split:** Sử dụng đúng cấu trúc thư mục `train`, `val`, `test` đã tạo.
+**Lưu ý:** Chúng tôi **KHÔNG** sử dụng phép lật ngang (Horizontal Flip) để tránh sai lệch giải phẫu tim/phổi (Đảo phủ tạng).
 
 ---
 
-## 6. Kết luận
-Giai đoạn Data Preprocessing đã hoàn tất. Dữ liệu đã được làm sạch, chuẩn hóa kích thước và tăng cường số lượng đáng kể. Các kỹ thuật xử lý ảnh (CLAHE, Sharpening, Padding) đã được áp dụng đúng theo định hướng của môn học để tối ưu hóa đặc trưng cho bài toán phân loại X-quang.
+## 5. Kết quả & Hướng dẫn sử dụng (Handover Guide)
 
-***
+### Thống kê Dữ liệu cuối cùng (Final Statistics)
+- **TRAIN:** ~19,000 ảnh (Tỷ lệ cân bằng Normal/Pneumonia xấp xỉ 1:1.2).
+- **VAL:** ~520 ảnh.
+- **TEST:** ~624 ảnh.
+
+### Hướng dẫn cho Team Model (Quốc Anh & Tấn Lộc)
+1.  **Dữ liệu:** Tải file `processed_data.zip` từ Drive chung và giải nén.
+2.  **Input Shape:**
+    - CNN: `(256, 256, 1)`
+    - ResNet: Cần convert sang 3 kênh màu (RGB) khi load data.
+3.  **Inference (Web App):**
+    - Sử dụng hàm `preprocess_image_for_model` trong file `utils.py` để xử lý ảnh upload từ người dùng. Hàm này đảm bảo ảnh đầu vào Web giống 100% với ảnh đã được huấn luyện.
+
+---
+**Kết luận:** Dữ liệu đã Sạch - Cân bằng - Tối ưu hóa đặc trưng. Sẵn sàng cho giai đoạn Training.
