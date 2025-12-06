@@ -42,7 +42,7 @@ def process_image_pipeline(img):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = resize_with_padding(img, target_size=TARGET_SIZE)
     img = cv2.GaussianBlur(img, (3, 3), 0)
-    img = apply_homomorphic_filter(img, d0=30, gamma_l=0.5, gamma_h=1.5)
+    img = apply_homomorphic_filter(img, d0=30, gamma_l=0.5, gamma_h=1.2)
     img = apply_clahe(img)
     return img
 
