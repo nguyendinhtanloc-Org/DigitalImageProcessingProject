@@ -5,8 +5,9 @@ import shutil
 import random
 from utils import process_image_pipeline
 
-RAW_DATA_DIR = "data/raw/chest_xray" 
-PROCESSED_DATA_DIR = "data/processed"
+current_script_path = os.path.dirname(os.path.abspath(__file__))
+RAW_DATA_DIR = os.path.join(current_script_path, "..", "raw", "chest_xray")
+PROCESSED_DATA_DIR = os.path.join(current_script_path, "..", "processed")
 
 def do_rotate(image):
     rows, cols = image.shape

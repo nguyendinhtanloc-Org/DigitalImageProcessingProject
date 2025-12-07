@@ -6,7 +6,8 @@ import numpy as np
 import random
 from glob import glob
 
-DATA_DIR = "data/raw/chest_xray"
+current_script_path = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(current_script_path, "..", "raw", "chest_xray")
 
 THRESH_MEAN_LOW = 40
 THRESH_MEAN_HIGH = 220

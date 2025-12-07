@@ -504,3 +504,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+data/processed.zip
+data/processed/
