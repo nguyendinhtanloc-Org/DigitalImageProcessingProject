@@ -176,14 +176,14 @@ def preprocess_image_with_steps(image, target_size=144):
     clahe_image = apply_clahe(homomorphic_image)
     steps['clahe'] = clahe_image.copy()
     
-    # Step 7: Normalize to [0, 1]
+    # Step 7: Normalize to [0, 1] - ONLY for model input, not part of training pipeline
     img_array = np.array(clahe_image)
     # Ensure grayscale (should be 2D array)
     if len(img_array.shape) == 3:
         img_array = img_array[:, :, 0]  # Take first channel if RGB somehow
     
     img_array = img_array.astype('float32') / 255.0
-    steps['normalized'] = clahe_image  # Keep PIL format for display
+    # Note: We don't add 'normalized' to steps because it's not visible preprocessing
     
     # Add batch and channel dimensions: (1, 144, 144, 1)
     img_array = np.expand_dims(img_array, axis=0)    # (144, 144) -> (1, 144, 144)
@@ -425,7 +425,6 @@ if uploaded_file is not None:
                 ("blurred", "🌫️ Gaussian Blur", "Làm mịn ảnh với kernel 3×3 - Giảm noise", "#E1F5FE"),
                 ("homomorphic", "💡 Homomorphic Filter", "Cân bằng illumination - Loại bỏ ảnh hưởng ánh sáng không đều", "#E8F5E9"),
                 ("clahe", "📈 CLAHE", "Contrast Limited Adaptive Histogram Equalization - Tăng độ tương phản", "#FFF3E0"),
-                ("normalized", "📊 Normalized", "Normalize giá trị pixel về [0, 1] range", "#E0F2F1")
             ]
             
             # Display in 3 columns per row for more compact layout
@@ -456,16 +455,18 @@ if uploaded_file is not None:
             <div style="background: #F8F9FA; padding: 0.75rem; border-radius: 8px; border-left: 4px solid #0066CC;">
                 <h4 style="margin: 0 0 0.5rem 0; color: #0066CC; font-size: 1rem;">📝 Tóm tắt Pipeline</h4>
                 <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.85rem;">
-                    Pipeline cho CNN model (input: 144×144)
+                    <strong>Training Preprocessing Pipeline</strong> (giống y hệt trong data/preprocessing-scripts/)
                 </p>
                 <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.6; color: #444; font-size: 0.85rem;">
                     <li><strong>Grayscale:</strong> RGB → 1 channel</li>
-                    <li><strong>Resize:</strong> 144×144 với padding</li>
-                    <li><strong>Gaussian Blur:</strong> Giảm noise (3×3)</li>
-                    <li><strong>Homomorphic:</strong> Cân bằng ánh sáng (d0=30)</li>
-                    <li><strong>CLAHE:</strong> Tăng contrast (clip=2.0)</li>
-                    <li><strong>Normalize:</strong> [0,255] → [0,1]</li>
+                    <li><strong>Resize:</strong> 144×144 với padding (giữ tỷ lệ)</li>
+                    <li><strong>Gaussian Blur:</strong> Giảm noise (3×3 kernel)</li>
+                    <li><strong>Homomorphic:</strong> Cân bằng ánh sáng (d0=30, γ_h=1.2, γ_l=0.5)</li>
+                    <li><strong>CLAHE:</strong> Tăng contrast (clipLimit=2.0, tileGrid=8×8)</li>
                 </ol>
+                <p style="margin: 0.5rem 0 0 0; color: #888; font-size: 0.8rem; font-style: italic;">
+                    💡 Note: Normalize về [0,1] chỉ áp dụng lúc inference (đưa vào model), không phải part của training pipeline.
+                </p>
             </div>
             """, unsafe_allow_html=True)
 
