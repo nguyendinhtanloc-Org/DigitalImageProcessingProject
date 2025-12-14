@@ -21,38 +21,57 @@ def generate_gradcam_heatmap(model, img_array, last_conv_layer_name=None):
     Returns:
         heatmap: numpy array of heatmap
     """
+    # Ensure model is built by making a prediction first
+    # This initializes all layers and their outputs
+    _ = model(img_array, training=False)
+    
     # Auto-detect last conv layer if not specified
     if last_conv_layer_name is None:
+        last_conv_layer_name = None
         for layer in reversed(model.layers):
             if isinstance(layer, keras.layers.Conv2D):
                 last_conv_layer_name = layer.name
                 break
+        
+        if last_conv_layer_name is None:
+            raise ValueError("No Conv2D layer found in model")
     
-    # Create a model that maps input to last conv layer + predictions
+    # Get the last conv layer
+    last_conv_layer = model.get_layer(last_conv_layer_name)
+    
+    # Create a model that maps input to last conv layer output and final predictions
     grad_model = keras.models.Model(
-        [model.inputs],
-        [model.get_layer(last_conv_layer_name).output, model.output]
+        inputs=model.input,
+        outputs=[last_conv_layer.output, model.output]
     )
     
-    # Compute gradient
+    # Compute gradient using GradientTape
     with tf.GradientTape() as tape:
+        # Forward pass
         conv_outputs, predictions = grad_model(img_array)
-        class_idx = tf.argmax(predictions[0])
-        loss = predictions[:, class_idx]
+        
+        # Get predicted class
+        pred_index = tf.argmax(predictions[0])
+        class_channel = predictions[:, pred_index]
     
-    # Gradient of class score with respect to conv output
-    grads = tape.gradient(loss, conv_outputs)
+    # Compute gradients of the predicted class wrt conv outputs
+    grads = tape.gradient(class_channel, conv_outputs)
     
-    # Pooled gradients
+    # Compute guided gradients (average pooling)
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
     
-    # Weight conv outputs by gradients
+    # Weight the conv outputs by the gradients
     conv_outputs = conv_outputs[0]
-    heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
+    pooled_grads = pooled_grads[..., tf.newaxis]
+    heatmap = conv_outputs @ pooled_grads
     heatmap = tf.squeeze(heatmap)
     
-    # Normalize heatmap
-    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+    # Normalize heatmap to [0, 1]
+    heatmap = tf.maximum(heatmap, 0)
+    max_val = tf.reduce_max(heatmap)
+    if max_val > 0:
+        heatmap = heatmap / max_val
+    
     return heatmap.numpy()
 
 

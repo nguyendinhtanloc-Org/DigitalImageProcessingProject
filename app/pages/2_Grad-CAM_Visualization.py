@@ -101,10 +101,7 @@ if uploaded_file is not None:
                         img_array = np.array(img_resized) / 255.0
                         img_array = np.expand_dims(img_array, axis=0)
                     
-                    # Build model by calling it once
-                    _ = model.predict(img_array, verbose=0)
-                    
-                    # Generate heatmap
+                    # Generate heatmap (model will be built inside this function)
                     heatmap = generate_gradcam_heatmap(model, img_array)
                     
                     # Display heatmap
