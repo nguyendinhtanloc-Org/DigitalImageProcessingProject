@@ -2,24 +2,11 @@
 ## Ignore files cho Python, Java/Spring Boot, React, và AI/ML models
 
 # ===========================
-# macOS System Files
-# ===========================
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-.Spotlight-V100
-.Trashes
-
-# ===========================
 # Python & ML Models
 # ===========================
 __pycache__/
-**/__pycache__/
 *.py[cod]
 *$py.class
-*.pyc
-*.pyo
 *.so
 .Python
 build/
@@ -47,7 +34,6 @@ env/
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb_checkpoints/
-**/.ipynb_checkpoints/
 
 # Model files (too large for Git)
 *.h5
@@ -59,9 +45,6 @@ env/
 *.onnx
 *.pb
 *.tflite
-models/*.pth
-models/*.pt
-models/*.h5
 models/saved_models/*.h5
 models/saved_models/*.pth
 
@@ -70,18 +53,8 @@ data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
-data/interim/*
+data/interim
 !data/interim/.gitkeep
-data/processed_final/*
-!data/processed_final/.gitkeep
-
-# Generated reports and outputs
-reports/*.png
-reports/*.jpg
-reports/*.jpeg
-reports/*.json
-!reports/README.md
-!reports/.gitkeep
 
 # TensorBoard & Training logs
 logs/

@@ -4,166 +4,115 @@ import hashlib
 import cv2
 import numpy as np
 import random
-import re
+from glob import glob
 from sklearn.model_selection import GroupShuffleSplit
 
-# Cấu hình
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-RAW_DATA_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../data/processed/chest_xray"))
-INTERIM_DATA_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../data/interim"))
+# --- CẤU HÌNH ---
+RAW_DATA_DIR = "data/raw/chest_xray"
+INTERIM_DATA_DIR = "data/interim"
 SEED = 42
+
+# Tỉ lệ chia (80% Train - 10% Val - 10% Test)
+TEST_SIZE = 0.1
+VAL_SIZE = 0.1111  # Vì sau khi tách 10% Test, còn lại 90%. Lấy 10% của tổng nghĩa là 1/9 của phần còn lại.
 
 random.seed(SEED)
 np.random.seed(SEED)
-
 
 def get_md5(file_path):
     try:
         with open(file_path, "rb") as f:
             return hashlib.md5(f.read()).hexdigest()
-    except Exception:
-        return None
+    except: return None
 
-
-# Trích patient id từ filename; ví dụ:
-# - "person100_bacteria_475.jpeg" -> "person100"
-# - "patient123_left.png" -> "patient123"
-# - nếu không khớp mẫu, trả về phần trước dấu chấm (tên không chứa đường dẫn)
 def extract_patient_id(filename):
-    base = os.path.basename(filename)
-    name = os.path.splitext(base)[0]
-    m = re.match(r'^(person\d+|patient\d+|p\d+)', name, flags=re.IGNORECASE)
-    if m:
-        return m.group(1).lower()
-    # fallback: nếu không có định dạng chuẩn, lấy prefix trước dấu '_' nếu có
-    if '_' in name:
-        return name.split('_')[0].lower()
-    return name.lower()
-
+    # Tách ID: person1946_bacteria... -> person1946
+    parts = filename.split('_')
+    if len(parts) > 1 and parts[0].startswith('person'):
+        return parts[0]
+    return filename 
 
 def clean_and_resplit():
-    print("Bắt đầu: làm sạch và chia lại dữ liệu (group split)")
-
+    print(f"=== BẮT ĐẦU GỘP TẤT CẢ VÀ CHIA LẠI (80-10-10) ===")
+    
     if os.path.exists(INTERIM_DATA_DIR):
         shutil.rmtree(INTERIM_DATA_DIR)
-
+    
+    # 1. Thu thập TẤT CẢ ảnh từ mọi ngóc ngách
     all_data = {'NORMAL': [], 'PNEUMONIA': []}
-    seen_hashes_train = set()
-
-    # Quét train và val nguồn để gom ảnh, loại bỏ file corrupt và trùng
-    for split in ['train', 'val']:
+    seen_hashes = set()
+    
+    print("--- Đang quét và gộp toàn bộ dữ liệu (Train+Val+Test)... ---")
+    
+    # Duyệt qua cả 3 folder cũ
+    for split in ['train', 'val', 'test']:
         for label in ['NORMAL', 'PNEUMONIA']:
-            src_dir = os.path.join(RAW_DATA_DIR, split, label)
-            if not os.path.exists(src_dir):
-                continue
-
-            for fname in os.listdir(src_dir):
-                if not fname.lower().endswith(('.jpg', '.jpeg', '.png')):
-                    continue
-                full_path = os.path.join(src_dir, fname)
-
-                # kiểm tra đọc file
+            path = os.path.join(RAW_DATA_DIR, split, label)
+            if not os.path.exists(path): continue
+            
+            files = os.listdir(path)
+            for f in files:
+                if not f.lower().endswith(('.jpg', '.jpeg', '.png')): continue
+                full_path = os.path.join(path, f)
+                
+                # Check lỗi đọc file
                 try:
-                    with open(full_path, 'rb'):
-                        pass
-                except Exception:
-                    print(f"[Skip-Corrupt] {full_path}")
+                    with open(full_path, 'rb') as _: pass
+                except:
+                    print(f"[Corrupt] Bỏ qua: {f}")
                     continue
 
+                # Check trùng lặp toàn cục
                 file_hash = get_md5(full_path)
-                if file_hash is None:
-                    print(f"[Skip-HashError] {full_path}")
-                    continue
-                if file_hash in seen_hashes_train:
-                    continue
-                seen_hashes_train.add(file_hash)
+                if file_hash in seen_hashes: continue
+                seen_hashes.add(file_hash)
+                
+                p_id = extract_patient_id(f)
+                all_data[label].append({'path': full_path, 'filename': f, 'patient_id': p_id})
 
-                p_id = extract_patient_id(fname)
-                all_data[label].append({'path': full_path, 'filename': fname, 'patient_id': p_id})
-
-    print("Số lượng ảnh thu được (train+val source):")
+    print(f"Tổng số ảnh sạch thu được:")
     print(f"- NORMAL: {len(all_data['NORMAL'])}")
     print(f"- PNEUMONIA: {len(all_data['PNEUMONIA'])}")
 
-    # Chia theo patient id: train 90% / val 10%
-    splitter = GroupShuffleSplit(n_splits=1, test_size=0.1, random_state=SEED)
-
+    # 2. Chia dữ liệu theo ID Bệnh nhân
+    print("\n--- Đang chia Train / Val / Test... ---")
+    
     for label in ['NORMAL', 'PNEUMONIA']:
         items = all_data[label]
-        if len(items) == 0:
-            print(f"[Warn] Nhãn {label} không có ảnh nguồn, bỏ qua.")
-            continue
-
-        groups = [it['patient_id'] for it in items]
-        unique_groups = set(groups)
-        if len(unique_groups) < 2:
-            # Không đủ group để split theo nhóm — fallback: random split trên ảnh
-            print(f"[Warn] Không đủ patient group cho nhãn {label}. Thực hiện split ngẫu nhiên trên ảnh.")
-            indices = np.arange(len(items))
-            np.random.shuffle(indices)
-            cutoff = int(len(indices) * 0.9)
-            train_idx = indices[:cutoff]
-            val_idx = indices[cutoff:]
-        else:
-            # chuẩn hóa X thành index array; gọi split với groups
-            X = np.arange(len(items))
-            try:
-                train_idx, val_idx = next(splitter.split(X, groups=groups))
-            except Exception as e:
-                print(f"[Error] Split thất bại cho nhãn {label}: {e}")
-                # fallback: random split
-                indices = np.arange(len(items))
-                np.random.shuffle(indices)
-                cutoff = int(len(indices) * 0.9)
-                train_idx = indices[:cutoff]
-                val_idx = indices[cutoff:]
-
-        for split_name, idx_list in [('train', train_idx), ('val', val_idx)]:
+        groups = [item['patient_id'] for item in items]
+        
+        # Bước 1: Tách Test ra trước (10%)
+        splitter_test = GroupShuffleSplit(n_splits=1, test_size=TEST_SIZE, random_state=SEED)
+        train_val_idx, test_idx = next(splitter_test.split(items, groups=groups))
+        
+        test_items = [items[i] for i in test_idx]
+        train_val_items = [items[i] for i in train_val_idx]
+        train_val_groups = [groups[i] for i in train_val_idx] # Update groups tương ứng
+        
+        # Bước 2: Tách Train và Val từ phần còn lại (Val lấy 11.11% của phần còn lại ~ 10% tổng)
+        splitter_val = GroupShuffleSplit(n_splits=1, test_size=VAL_SIZE, random_state=SEED)
+        train_idx, val_idx = next(splitter_val.split(train_val_items, groups=train_val_groups))
+        
+        train_items = [train_val_items[i] for i in train_idx]
+        val_items = [train_val_items[i] for i in val_idx]
+        
+        # 3. Copy file vào thư mục đích
+        for split_name, item_list in [('train', train_items), ('val', val_items), ('test', test_items)]:
             target_dir = os.path.join(INTERIM_DATA_DIR, split_name, label)
             os.makedirs(target_dir, exist_ok=True)
-            for i in idx_list:
-                it = items[int(i)]
-                shutil.copy2(it['path'], os.path.join(target_dir, it['filename']))
+            
+            for item in item_list:
+                shutil.copy2(item['path'], os.path.join(target_dir, item['filename']))
 
-    # Xử lý test: lọc file corrupt, file quá nhỏ, loại trùng lặp
-    for label in ['NORMAL', 'PNEUMONIA']:
-        src_dir = os.path.join(RAW_DATA_DIR, 'test', label)
-        dst_dir = os.path.join(INTERIM_DATA_DIR, 'test', label)
-        os.makedirs(dst_dir, exist_ok=True)
-        if not os.path.exists(src_dir):
-            continue
-
-        test_seen_hashes = set()
-        for fname in os.listdir(src_dir):
-            if not fname.lower().endswith(('.jpg', '.jpeg', '.png')):
-                continue
-            full_path = os.path.join(src_dir, fname)
-
-            try:
-                img = cv2.imread(full_path)
-                if img is None:
-                    print(f"[Test-Corrupt] {full_path}")
-                    continue
-                if img.shape[0] < 50 or img.shape[1] < 50:
-                    print(f"[Test-Small] {full_path}")
-                    continue
-            except Exception:
-                print(f"[Test-ReadError] {full_path}")
-                continue
-
-            file_hash = get_md5(full_path)
-            if file_hash is None:
-                print(f"[Test-HashError] {full_path}")
-                continue
-            if file_hash in test_seen_hashes:
-                print(f"[Test-Duplicate] {full_path}")
-                continue
-            test_seen_hashes.add(file_hash)
-
-            shutil.copy2(full_path, os.path.join(dst_dir, fname))
-
-    print("Hoàn tất. Dữ liệu sạch đã lưu tại:", INTERIM_DATA_DIR)
-
+    print("\n=== HOÀN TẤT ===")
+    print(f"Dữ liệu (80/10/10) đã sẵn sàng tại: {INTERIM_DATA_DIR}")
+    
+    # In thống kê nhanh để kiểm tra
+    for split in ['train', 'val', 'test']:
+        n_norm = len(os.listdir(os.path.join(INTERIM_DATA_DIR, split, 'NORMAL')))
+        n_pneu = len(os.listdir(os.path.join(INTERIM_DATA_DIR, split, 'PNEUMONIA')))
+        total = n_norm + n_pneu
+        print(f"- {split.upper()}: {total} ảnh (Norm: {n_norm}, Pneu: {n_pneu})")
 
 if __name__ == "__main__":
     clean_and_resplit()
