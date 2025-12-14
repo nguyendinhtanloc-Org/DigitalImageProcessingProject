@@ -77,19 +77,32 @@ if uploaded_file is not None:
         st.subheader("Original Image")
         st.image(image, use_container_width=True)
     
+    # Initialize heatmap variable in outer scope
+    heatmap = None
+    
     with col2:
         st.subheader("Grad-CAM Heatmap")
         
         if UTILS_AVAILABLE:
             with st.spinner("Generating Grad-CAM..."):
                 try:
-                    # Preprocess image
-                    img_array = np.array(image.resize((224, 224)))
-                    img_array = img_array / 255.0
-                    img_array = np.expand_dims(img_array, axis=0)
-                    
                     # Select model
                     model = st.session_state.cnn_model if model_choice == "CNN" else st.session_state.resnet_model
+                    
+                    # Preprocess image (same as main app)
+                    if model_choice == "CNN":
+                        # CNN: 144x144 grayscale
+                        img_resized = image.convert('L').resize((144, 144))
+                        img_array = np.array(img_resized) / 255.0
+                        img_array = np.expand_dims(np.expand_dims(img_array, 0), -1)
+                    else:
+                        # ResNet: 224x224 RGB
+                        img_resized = image.convert('RGB').resize((224, 224))
+                        img_array = np.array(img_resized) / 255.0
+                        img_array = np.expand_dims(img_array, axis=0)
+                    
+                    # Build model by calling it once
+                    _ = model.predict(img_array, verbose=0)
                     
                     # Generate heatmap
                     heatmap = generate_gradcam_heatmap(model, img_array)
@@ -109,7 +122,7 @@ if uploaded_file is not None:
     with col3:
         st.subheader("Overlay")
         
-        if UTILS_AVAILABLE:
+        if UTILS_AVAILABLE and heatmap is not None:
             try:
                 # Create overlay
                 overlay_img = overlay_heatmap_on_image(image, heatmap, alpha=0.4)
@@ -119,6 +132,8 @@ if uploaded_file is not None:
                 
             except Exception as e:
                 st.error(f"Error creating overlay: {e}")
+        else:
+            st.info("Heatmap chưa được generate hoặc có lỗi ở bước trước")
     
     # Interpretation guide
     st.markdown("---")

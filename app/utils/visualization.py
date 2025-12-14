@@ -177,47 +177,49 @@ def create_comparison_table(cnn_metrics, resnet_metrics):
     """
     html = """
 <style>
-    .comparison-table-container {
-        margin: 1.5rem 0;
-        overflow-x: auto;
-    }
-    .comparison-table {
+    .model-comparison-table {
         width: 100%;
         border-collapse: collapse;
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin: 1.5rem 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    .comparison-table thead tr {
-        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    .model-comparison-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
     }
-    .comparison-table th {
-        padding: 1rem;
+    .model-comparison-table th {
+        padding: 12px 16px;
         font-weight: 600;
-        color: #1e293b;
-        border-bottom: 2px solid #cbd5e1;
+        text-align: center;
     }
-    .comparison-table td {
-        padding: 0.875rem 1rem;
-        border-bottom: 1px solid #f1f5f9;
+    .model-comparison-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: center;
     }
-    .comparison-table tbody tr:hover {
-        background-color: #f8fafc;
+    .model-comparison-table tbody tr:nth-child(even) {
+        background-color: #f7fafc;
+    }
+    .model-comparison-table tbody tr:hover {
+        background-color: #edf2f7;
+    }
+    .metric-label {
+        font-weight: 600;
+        color: #2d3748;
+        text-align: left !important;
     }
     .winner-cell {
         font-weight: 700;
         color: #0066CC;
     }
 </style>
-<div class="comparison-table-container">
-<table class="comparison-table">
+<table class="model-comparison-table">
     <thead>
         <tr>
             <th style="text-align: left;">Metric</th>
-            <th style="text-align: center;">CNN</th>
-            <th style="text-align: center;">ResNet-50</th>
-            <th style="text-align: center;">Winner</th>
+            <th>CNN</th>
+            <th>ResNet-50</th>
+            <th>Winner</th>
         </tr>
     </thead>
     <tbody>
@@ -233,17 +235,16 @@ def create_comparison_table(cnn_metrics, resnet_metrics):
         
         html += f"""
         <tr>
-            <td><strong>{label}</strong></td>
-            <td style="text-align: center;">{cnn_val:.1%}</td>
-            <td style="text-align: center;">{resnet_val:.1%}</td>
-            <td style="text-align: center;" class="winner-cell">{winner}</td>
+            <td class="metric-label">{label}</td>
+            <td>{cnn_val:.1%}</td>
+            <td>{resnet_val:.1%}</td>
+            <td class="winner-cell">{winner}</td>
         </tr>
 """
     
     html += """
     </tbody>
 </table>
-</div>
 """
     
     return html
