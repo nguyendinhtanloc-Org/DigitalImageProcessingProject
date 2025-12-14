@@ -416,7 +416,7 @@ if uploaded_file is not None:
                 </p>
                 """, unsafe_allow_html=True)
                 
-                # Display steps in a grid
+                # Display steps in a grid (3 columns for compact layout)
                 step_info = [
                     ("original", "📷 Original", "Ảnh gốc được upload", "#E3F2FD"),
                     ("grayscale", "⚫ Grayscale", "Convert sang ảnh xám (1 channel)", "#F3E5F5"),
@@ -427,9 +427,9 @@ if uploaded_file is not None:
                     ("normalized", "📊 Normalized", "Normalize giá trị pixel về [0, 1] range", "#E0F2F1")
                 ]
                 
-                # Display in 2 columns per row
-                for i in range(0, len(step_info), 2):
-                    cols = st.columns(2)
+                # Display in 3 columns per row for more compact layout
+                for i in range(0, len(step_info), 3):
+                    cols = st.columns(3)
                     
                     for idx, col in enumerate(cols):
                         if i + idx < len(step_info):
@@ -437,32 +437,33 @@ if uploaded_file is not None:
                             
                             with col:
                                 st.markdown(f"""
-                                <div style="background: {bg_color}; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; text-align: center;">
-                                    <h4 style="margin: 0; color: #333; font-size: 1rem;">{title}</h4>
-                                    <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.8rem;">{description}</p>
+                                <div style="background: {bg_color}; padding: 0.5rem; border-radius: 8px; margin-bottom: 0.5rem; text-align: center;">
+                                    <h4 style="margin: 0; color: #333; font-size: 0.9rem;">{title}</h4>
+                                    <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.75rem; line-height: 1.3;">{description}</p>
                                 </div>
                                 """, unsafe_allow_html=True)
                                 
                                 if step_key in preprocessing_steps:
-                                    st.image(preprocessing_steps[step_key], use_container_width=True)
+                                    # Use fixed width for compact display
+                                    st.image(preprocessing_steps[step_key], width=200)
                                 else:
-                                    st.info(f"Step {step_key} not available")
+                                    st.caption(f"Step {step_key} not available")
                 
-                # Summary
+                # Summary - more compact
                 st.markdown("---")
                 st.markdown("""
-                <div style="background: #F8F9FA; padding: 1rem; border-radius: 8px; border-left: 4px solid #0066CC;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #0066CC;">📝 Tóm tắt Pipeline</h4>
-                    <p style="margin: 0 0 0.75rem 0; color: #666; font-size: 0.9rem;">
+                <div style="background: #F8F9FA; padding: 0.75rem; border-radius: 8px; border-left: 4px solid #0066CC;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #0066CC; font-size: 1rem;">📝 Tóm tắt Pipeline</h4>
+                    <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.85rem;">
                         Pipeline cho CNN model (input: 144×144)
                     </p>
-                    <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.8; color: #444;">
-                        <li><strong>Grayscale Conversion:</strong> Giảm số chiều từ RGB (3 channels) xuống 1 channel</li>
-                        <li><strong>Resize với Padding:</strong> Scale về 144×144 giữ nguyên tỷ lệ, thêm padding đen</li>
-                        <li><strong>Gaussian Blur 3×3:</strong> Làm mịn ảnh, giảm noise và artifacts</li>
-                        <li><strong>Homomorphic Filter:</strong> Loại bỏ uneven lighting, normalize illumination (d0=30, γ_h=1.2, γ_l=0.5)</li>
-                        <li><strong>CLAHE:</strong> Tăng độ tương phản local, làm nổi bật chi tiết trong lung regions (clipLimit=2.0, tileGrid=8×8)</li>
-                        <li><strong>Normalization:</strong> Scale pixel values từ [0, 255] về [0, 1] cho neural network</li>
+                    <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.6; color: #444; font-size: 0.85rem;">
+                        <li><strong>Grayscale:</strong> RGB → 1 channel</li>
+                        <li><strong>Resize:</strong> 144×144 với padding</li>
+                        <li><strong>Gaussian Blur:</strong> Giảm noise (3×3)</li>
+                        <li><strong>Homomorphic:</strong> Cân bằng ánh sáng (d0=30)</li>
+                        <li><strong>CLAHE:</strong> Tăng contrast (clip=2.0)</li>
+                        <li><strong>Normalize:</strong> [0,255] → [0,1]</li>
                     </ol>
                 </div>
                 """, unsafe_allow_html=True)
