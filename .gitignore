@@ -53,6 +53,8 @@ data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+data/interim
+!data/interim/.gitkeep
 
 # TensorBoard & Training logs
 logs/

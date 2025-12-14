@@ -6,8 +6,8 @@ import hashlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-DATA_DIR = "data/processed" # data/raw/chest_xray or data/processed
-REPORT_DIR = "data/reports/after_processed" #data/reports/before_processed or after_processed
+DATA_DIR = "data/raw/chest_xray" # data/raw/chest_xray or data/processed
+REPORT_DIR = "data/reports/before_processed" #data/reports/before_processed or after_processed
 
 if not os.path.exists(REPORT_DIR):
     os.makedirs(REPORT_DIR)
