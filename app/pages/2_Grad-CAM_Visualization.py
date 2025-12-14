@@ -95,8 +95,8 @@ if uploaded_file is not None:
                     
                     # Preprocess image (MUST use same pipeline as training)
                     if model_choice == "CNN":
-                        # CNN: 256x256 grayscale with full preprocessing pipeline
-                        img_array = preprocess_image(image, target_size=256)
+                        # CNN: 144x144 grayscale with full preprocessing pipeline
+                        img_array = preprocess_image(image, target_size=144)
                     else:
                         # ResNet: 224x224 RGB (different preprocessing)
                         img_resized = image.convert('RGB').resize((224, 224))
@@ -255,10 +255,10 @@ if uploaded_file is not None:
         - yc = score của class c (predicted class)
         ```
         
-        ### Tại sao heatmap có độ phân giải thấp (32×32)?
+        ### Tại sao heatmap có độ phân giải thấp (18×18)?
         
-        - Last Conv2D layer của model có output shape: **32×32×256**
-        - Input: 256×256 → qua 4 MaxPooling (÷2 mỗi lần) → 256÷16 = 16 (or 32 depending on architecture)
+        - Last Conv2D layer của model có output shape: **18×18×256**
+        - Input: 144×144 → qua 4 MaxPooling (÷2 mỗi lần) → 144÷16 = 9 (hoặc 144÷8 = 18)
         - Sau đó được **resize lên** kích thước ảnh gốc để overlay
         - Pixelation là bình thường - cho thấy "field of view" của conv layers
         """)

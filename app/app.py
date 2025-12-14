@@ -91,7 +91,7 @@ def load_models():
         st.error(f"Error loading models: {e}")
         return None, None
 
-def preprocess_image(image, target_size=256):
+def preprocess_image(image, target_size=144):
     """Preprocess image for model prediction (simple version without steps)"""
     from utils.image_processing import apply_clahe, apply_homomorphic_filter, resize_with_padding
     
@@ -99,7 +99,7 @@ def preprocess_image(image, target_size=256):
     if image.mode != 'L':
         image = image.convert('L')
     
-    # Resize with padding to 256x256
+    # Resize with padding to 144x144 (CNN model was trained with this size)
     image = resize_with_padding(image, target_size=target_size)
     # Ensure grayscale after resize
     if image.mode != 'L':
@@ -124,18 +124,18 @@ def preprocess_image(image, target_size=256):
     
     img_array = img_array.astype('float32') / 255.0
     
-    # Add batch dimension and channel dimension: (1, 256, 256, 1)
-    img_array = np.expand_dims(img_array, axis=0)    # (256, 256) -> (1, 256, 256)
-    img_array = np.expand_dims(img_array, axis=-1)   # (1, 256, 256) -> (1, 256, 256, 1)
+    # Add batch dimension and channel dimension: (1, 144, 144, 1)
+    img_array = np.expand_dims(img_array, axis=0)    # (144, 144) -> (1, 144, 144)
+    img_array = np.expand_dims(img_array, axis=-1)   # (1, 144, 144) -> (1, 144, 144, 1)
     
     return img_array
 
 
-def preprocess_image_with_steps(image, target_size=256):
+def preprocess_image_with_steps(image, target_size=144):
     """
     Preprocess image and return intermediate steps for visualization
-    MUST match training pipeline in data/preprocessing-scripts/utils.py:
-    Grayscale → Resize 256x256 (padding) → Gaussian Blur → Homomorphic Filter → CLAHE → Normalize
+    Pipeline: Grayscale → Resize 144x144 (padding) → Gaussian Blur → Homomorphic Filter → CLAHE → Normalize
+    Note: CNN model was trained with 144x144, not 256x256
     
     Returns:
         tuple: (final_array, steps_dict)
@@ -155,7 +155,7 @@ def preprocess_image_with_steps(image, target_size=256):
         gray_image = image
     steps['grayscale'] = gray_image.copy()
     
-    # Step 3: Resize with padding to 256x256 (SAME AS TRAINING)
+    # Step 3: Resize with padding to 144x144 (CNN model input size)
     resized_image = resize_with_padding(gray_image, target_size=target_size)
     # Ensure grayscale after resize
     if resized_image.mode != 'L':
@@ -185,9 +185,9 @@ def preprocess_image_with_steps(image, target_size=256):
     img_array = img_array.astype('float32') / 255.0
     steps['normalized'] = clahe_image  # Keep PIL format for display
     
-    # Add batch and channel dimensions: (1, 256, 256, 1)
-    img_array = np.expand_dims(img_array, axis=0)    # (256, 256) -> (1, 256, 256)
-    img_array = np.expand_dims(img_array, axis=-1)   # (1, 256, 256) -> (1, 256, 256, 1)
+    # Add batch and channel dimensions: (1, 144, 144, 1)
+    img_array = np.expand_dims(img_array, axis=0)    # (144, 144) -> (1, 144, 144)
+    img_array = np.expand_dims(img_array, axis=-1)   # (1, 144, 144) -> (1, 144, 144, 1)
     
     return img_array, steps
 
@@ -420,7 +420,7 @@ if uploaded_file is not None:
                 step_info = [
                     ("original", "📷 Original", "Ảnh gốc được upload", "#E3F2FD"),
                     ("grayscale", "⚫ Grayscale", "Convert sang ảnh xám (1 channel)", "#F3E5F5"),
-                    ("resized", "🔳 Resize", "Resize về 256×256 pixels với padding (giữ nguyên tỷ lệ)", "#FCE4EC"),
+                    ("resized", "🔳 Resize", "Resize về 144×144 pixels với padding (giữ nguyên tỷ lệ)", "#FCE4EC"),
                     ("blurred", "🌫️ Gaussian Blur", "Làm mịn ảnh với kernel 3×3 - Giảm noise", "#E1F5FE"),
                     ("homomorphic", "💡 Homomorphic Filter", "Cân bằng illumination - Loại bỏ ảnh hưởng ánh sáng không đều", "#E8F5E9"),
                     ("clahe", "📈 CLAHE", "Contrast Limited Adaptive Histogram Equalization - Tăng độ tương phản", "#FFF3E0"),
@@ -454,11 +454,11 @@ if uploaded_file is not None:
                 <div style="background: #F8F9FA; padding: 1rem; border-radius: 8px; border-left: 4px solid #0066CC;">
                     <h4 style="margin: 0 0 0.5rem 0; color: #0066CC;">📝 Tóm tắt Pipeline</h4>
                     <p style="margin: 0 0 0.75rem 0; color: #666; font-size: 0.9rem;">
-                        Pipeline này <strong>giống y hệt</strong> quá trình training trong <code>data/preprocessing-scripts/</code>
+                        Pipeline cho CNN model (input: 144×144)
                     </p>
                     <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.8; color: #444;">
                         <li><strong>Grayscale Conversion:</strong> Giảm số chiều từ RGB (3 channels) xuống 1 channel</li>
-                        <li><strong>Resize với Padding:</strong> Scale về 256×256 giữ nguyên tỷ lệ, thêm padding đen</li>
+                        <li><strong>Resize với Padding:</strong> Scale về 144×144 giữ nguyên tỷ lệ, thêm padding đen</li>
                         <li><strong>Gaussian Blur 3×3:</strong> Làm mịn ảnh, giảm noise và artifacts</li>
                         <li><strong>Homomorphic Filter:</strong> Loại bỏ uneven lighting, normalize illumination (d0=30, γ_h=1.2, γ_l=0.5)</li>
                         <li><strong>CLAHE:</strong> Tăng độ tương phản local, làm nổi bật chi tiết trong lung regions (clipLimit=2.0, tileGrid=8×8)</li>
