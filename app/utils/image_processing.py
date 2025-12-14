@@ -112,8 +112,11 @@ def apply_homomorphic_filter(image, gamma_h=2.0, gamma_l=0.5, c=1.0, cutoff=30):
     # Convert to grayscale
     img_array = np.array(image.convert('L'), dtype=np.float32)
     
+    # Add small epsilon to avoid log(0)
+    img_array = np.maximum(img_array, 1.0)
+    
     # Take log transform
-    img_log = np.log1p(img_array)
+    img_log = np.log(img_array)
     
     # FFT
     img_fft = np.fft.fft2(img_log)
@@ -140,10 +143,12 @@ def apply_homomorphic_filter(image, gamma_h=2.0, gamma_l=0.5, c=1.0, cutoff=30):
     img_filtered = np.real(np.fft.ifft2(img_ifft))
     
     # Exp to reverse log
-    img_exp = np.expm1(img_filtered)
+    img_exp = np.exp(img_filtered)
     
-    # Normalize to 0-255
-    img_normalized = np.clip(img_exp, 0, 255).astype(np.uint8)
+    # Normalize to 0-255 with better scaling
+    img_min = np.min(img_exp)
+    img_max = np.max(img_exp)
+    img_normalized = ((img_exp - img_min) / (img_max - img_min) * 255).astype(np.uint8)
     
     return Image.fromarray(img_normalized)
 

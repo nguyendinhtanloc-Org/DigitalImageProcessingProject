@@ -38,15 +38,25 @@ st.markdown("""
 """)
 
 # Check if models are loaded
-if 'cnn_model' not in st.session_state or 'resnet_model' not in st.session_state:
-    st.warning("Models chưa được load. Vui lòng quay lại trang chính để load models.")
-    st.info("Upload ảnh và predict ở trang chính trước, sau đó quay lại đây để xem Grad-CAM.")
+if 'cnn_model' not in st.session_state:
+    st.warning("⚠️ CNN model chưa được load. Vui lòng quay lại trang chính để load models.")
+    st.info("💡 **Hướng dẫn:** Truy cập trang chính (Home) để load models, sau đó quay lại đây.")
     st.stop()
 
-# Model selection
+# Model selection - chỉ hiển thị models đã được load
+available_models = []
+if st.session_state.get('cnn_model') is not None:
+    available_models.append("CNN")
+if st.session_state.get('resnet_model') is not None:
+    available_models.append("ResNet-50")
+
+if not available_models:
+    st.error("Không có model nào được load!")
+    st.stop()
+
 model_choice = st.radio(
     "Chọn model để visualize:",
-    ["CNN", "ResNet-50"],
+    available_models,
     horizontal=True
 )
 

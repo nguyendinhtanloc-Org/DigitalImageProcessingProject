@@ -143,6 +143,12 @@ st.markdown("""
 # Load models
 cnn_model, resnet_model = load_models()
 
+# Store models in session state for Grad-CAM page
+if 'cnn_model' not in st.session_state:
+    st.session_state.cnn_model = cnn_model
+if 'resnet_model' not in st.session_state:
+    st.session_state.resnet_model = resnet_model
+
 if not TF_AVAILABLE:
     st.warning("**TensorFlow không khả dụng!** Vui lòng cài đặt: `pip install tensorflow`")
     models_ready = False
@@ -186,11 +192,13 @@ with st.sidebar:
     st.markdown("""
     <div style="padding: 0.5rem;">
         <h3 style="color: #0066CC; font-size: 1.1rem; margin-bottom: 1rem;">Hướng dẫn sử dụng</h3>
-        <ol style="font-size: 0.9rem; line-height: 1.8; color: #444;">
-            <li>Chọn model (CNN hoặc ResNet-50)</li>
-            <li>Upload ảnh X-quang ngực</li>
-            <li>Xem kết quả phân tích</li>
-        </ol>
+        <div style="padding-left: 1.5rem;">
+            <ol style="font-size: 0.9rem; line-height: 1.8; color: #444; margin: 0;">
+                <li style="margin-bottom: 0.5rem;">Chọn model (CNN hoặc ResNet-50)</li>
+                <li style="margin-bottom: 0.5rem;">Upload ảnh X-quang ngực</li>
+                <li style="margin-bottom: 0.5rem;">Xem kết quả phân tích</li>
+            </ol>
+        </div>
         
         <h3 style="color: #0066CC; font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 1rem;">Team Prompt Engineer</h3>
         <p style="font-size: 0.85rem; line-height: 1.6; color: #666;">

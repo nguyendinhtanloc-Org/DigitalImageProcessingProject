@@ -177,10 +177,13 @@ def create_comparison_table(cnn_metrics, resnet_metrics):
     """
     html = """
 <style>
+    .comparison-table-container {
+        margin: 1.5rem 0;
+        overflow-x: auto;
+    }
     .comparison-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 1.5rem 0;
         background: white;
         border-radius: 8px;
         overflow: hidden;
@@ -191,7 +194,6 @@ def create_comparison_table(cnn_metrics, resnet_metrics):
     }
     .comparison-table th {
         padding: 1rem;
-        text-align: left;
         font-weight: 600;
         color: #1e293b;
         border-bottom: 2px solid #cbd5e1;
@@ -208,6 +210,7 @@ def create_comparison_table(cnn_metrics, resnet_metrics):
         color: #0066CC;
     }
 </style>
+<div class="comparison-table-container">
 <table class="comparison-table">
     <thead>
         <tr>
@@ -240,6 +243,7 @@ def create_comparison_table(cnn_metrics, resnet_metrics):
     html += """
     </tbody>
 </table>
+</div>
 """
     
     return html
