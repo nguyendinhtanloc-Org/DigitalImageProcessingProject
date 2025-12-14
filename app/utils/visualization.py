@@ -102,7 +102,7 @@ def overlay_heatmap_on_image(image, heatmap, alpha=0.4, colormap=cv2.COLORMAP_JE
     
     Args:
         image: PIL Image or numpy array
-        heatmap: Grad-CAM heatmap
+        heatmap: Grad-CAM heatmap (2D array)
         alpha: Transparency of heatmap overlay
         colormap: OpenCV colormap
     
@@ -115,17 +115,29 @@ def overlay_heatmap_on_image(image, heatmap, alpha=0.4, colormap=cv2.COLORMAP_JE
     else:
         img = image
     
-    # Resize heatmap to match image
-    heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[0]))
+    # Ensure image is RGB (convert grayscale to RGB if needed)
+    if len(img.shape) == 2:  # Grayscale
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    elif img.shape[2] == 4:  # RGBA
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+    elif img.shape[2] == 1:  # Grayscale with channel dimension
+        img = cv2.cvtColor(img.squeeze(), cv2.COLOR_GRAY2RGB)
     
-    # Convert heatmap to RGB
-    heatmap = np.uint8(255 * heatmap)
-    heatmap = cv2.applyColorMap(heatmap, colormap)
-    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+    # Resize heatmap to match image dimensions
+    heatmap_resized = cv2.resize(heatmap, (img.shape[1], img.shape[0]))
     
-    # Superimpose heatmap on image
-    superimposed_img = heatmap * alpha + img * (1 - alpha)
-    superimposed_img = np.uint8(superimposed_img)
+    # Convert heatmap to RGB color map
+    heatmap_uint8 = np.uint8(255 * heatmap_resized)
+    heatmap_colored = cv2.applyColorMap(heatmap_uint8, colormap)
+    heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+    
+    # Ensure both images have the same dtype and shape
+    img = img.astype(np.float32)
+    heatmap_colored = heatmap_colored.astype(np.float32)
+    
+    # Blend heatmap with original image
+    superimposed_img = heatmap_colored * alpha + img * (1 - alpha)
+    superimposed_img = np.clip(superimposed_img, 0, 255).astype(np.uint8)
     
     return Image.fromarray(superimposed_img)
 

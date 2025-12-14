@@ -134,40 +134,176 @@ if uploaded_file is not None:
     
     # Interpretation guide
     st.markdown("---")
-    st.subheader("How to Interpret Grad-CAM")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white; margin-bottom: 2rem;">
+        <h2 style="margin: 0 0 1rem 0; font-size: 1.8rem;">🔍 Hướng dẫn hiểu Grad-CAM Heatmap</h2>
+        <p style="margin: 0; font-size: 1.1rem; line-height: 1.6;">
+            Grad-CAM (Gradient-weighted Class Activation Mapping) giúp bạn <strong>nhìn thấy model đang "nhìn" vào đâu</strong> khi đưa ra dự đoán.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.subheader("📊 Ý nghĩa màu sắc trong Heatmap")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        **Red/Orange areas:**
-        - High activation regions
-        - Model focuses here for prediction
-        - Important features detected
+        <div style="background: #FFF3E0; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #FF9800;">
+            <h4 style="color: #E65100; margin-top: 0;">🔴 Vùng ĐỎ/CAM/VÀNG (Hot zones)</h4>
+            <ul style="line-height: 1.8; color: #444;">
+                <li><strong>Activation cao:</strong> Model chú ý NHIỀU nhất</li>
+                <li><strong>Quan trọng:</strong> Đây là vùng quyết định prediction</li>
+                <li><strong>Với Pneumonia:</strong> Thường ở lung regions có tổn thương</li>
+                <li><strong>Giá trị:</strong> Gần 1.0 (100% attention)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
         
-        **Blue areas:**
-        - Low activation
-        - Less relevant for decision
+        st.markdown("""
+        <div style="background: #E8F5E9; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #4CAF50; margin-top: 1rem;">
+            <h4 style="color: #1B5E20; margin-top: 0;">🟢 Vùng XANH LÁ (Medium zones)</h4>
+            <ul style="line-height: 1.8; color: #444;">
+                <li><strong>Activation trung bình:</strong> Model có chú ý nhưng không ưu tiên</li>
+                <li><strong>Giá trị:</strong> 0.3 - 0.7</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style="background: #E3F2FD; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #2196F3;">
+            <h4 style="color: #0D47A1; margin-top: 0;">🔵 Vùng XANH DƯƠNG (Cold zones)</h4>
+            <ul style="line-height: 1.8; color: #444;">
+                <li><strong>Activation thấp:</strong> Model GẦN NHƯ BỎ QUA</li>
+                <li><strong>Không quan trọng:</strong> Không ảnh hưởng quyết định</li>
+                <li><strong>Ví dụ:</strong> Background, viền ảnh, vùng không liên quan</li>
+                <li><strong>Giá trị:</strong> Gần 0.0 (0% attention)</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.subheader("🏥 Cách đọc kết quả cho Pneumonia Detection")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        ### ✅ Dấu hiệu GOOD (Model học đúng)
+        
+        <div style="background: #F1F8E9; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+            <p style="margin: 0; line-height: 1.8; color: #444;">
+                ✓ <strong>Focus vào lung regions</strong> (2 phổi)<br>
+                ✓ <strong>Highlight vùng có infiltrates</strong> (đám mờ)<br>
+                ✓ <strong>Tập trung vào abnormal patterns</strong><br>
+                ✓ <strong>Bỏ qua background</strong> và edges<br>
+                ✓ <strong>Symmetric attention</strong> cho cả 2 phổi (nếu cần)
+            </p>
+        </div>
+        
+        **Ví dụ trong ảnh của bạn:**
+        - Vùng vàng/đỏ xuất hiện ở **giữa ảnh** → có thể là lung region
+        - Model đang chú ý vào **các vùng có texture khác biệt**
         """)
     
     with col2:
         st.markdown("""
-        **For Pneumonia Detection:**
-        - Model should focus on lung regions
-        - Abnormal patterns (infiltrates, consolidation)
-        - Not focused on edges or irrelevant areas
+        ### ⚠️ Dấu hiệu BAD (Model học sai)
         
-        **Good Grad-CAM:**
-        - Highlights actual pneumonia patterns
-        - Focused on relevant anatomical regions
+        <div style="background: #FFEBEE; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+            <p style="margin: 0; line-height: 1.8; color: #444;">
+                ✗ <strong>Focus vào text/labels</strong> trên ảnh<br>
+                ✗ <strong>Chú ý vào viền/góc ảnh</strong><br>
+                ✗ <strong>Highlight vùng không liên quan</strong> (ngoài phổi)<br>
+                ✗ <strong>Attention lan tỏa</strong> không rõ ràng<br>
+                ✗ <strong>Bỏ qua lung regions</strong> hoàn toàn
+            </p>
+        </div>
+        
+        **Cách khắc phục:**
+        - Retrain model với data augmentation tốt hơn
+        - Loại bỏ text/artifacts khỏi training images
+        - Sử dụng attention mechanisms trong architecture
+        """)
+    
+    st.markdown("---")
+    st.subheader("🔬 Giải thích kỹ thuật")
+    
+    with st.expander("📖 Grad-CAM hoạt động như thế nào?"):
+        st.markdown("""
+        ### Các bước tính toán:
+        
+        1. **Forward pass:** Đưa ảnh qua model CNN
+        2. **Lấy feature maps:** Từ last convolutional layer (18×18×256)
+        3. **Backward pass:** Tính gradient của predicted class wrt. feature maps
+        4. **Global Average Pooling:** Tính trung bình gradients → weights cho mỗi channel
+        5. **Weighted combination:** Nhân weights với feature maps và cộng lại
+        6. **ReLU + Normalize:** Loại bỏ giá trị âm và chuẩn hóa về [0, 1]
+        7. **Upsampling:** Resize 18×18 → kích thước ảnh gốc
+        
+        ### Công thức toán học:
+        
+        ```
+        L_Grad-CAM = ReLU(Σ(αk * Ak))
+        
+        Trong đó:
+        - αk = (1/Z) * Σ Σ (∂yc/∂Akij)  (global average pooling of gradients)
+        - Ak = feature map thứ k từ last conv layer
+        - yc = score của class c (predicted class)
+        ```
+        
+        ### Tại sao heatmap có độ phân giải thấp (18×18)?
+        
+        - Last Conv2D layer của model có output shape: **18×18×256**
+        - Input: 144×144 → qua 4 MaxPooling (÷2 mỗi lần) → 144÷8 = 18
+        - Sau đó được **resize lên** kích thước ảnh gốc để overlay
+        - Pixelation là bình thường - cho thấy "field of view" của conv layers
+        """)
+    
+    with st.expander("💡 Tại sao cần Grad-CAM?"):
+        st.markdown("""
+        ### Lợi ích trong thực tế:
+        
+        1. **Explainability (Giải thích được):**
+           - Bác sĩ/người dùng hiểu tại sao model đưa ra kết luận
+           - Tăng độ tin cậy khi deploy vào môi trường y tế
+        
+        2. **Debugging (Phát hiện lỗi):**
+           - Phát hiện model học sai (focus vào text, artifacts)
+           - Validate model học đúng features (lung patterns)
+        
+        3. **Model improvement:**
+           - Hiểu model đang "nhìn" gì
+           - Cải thiện data quality/augmentation
+        
+        4. **Trust & Compliance:**
+           - FDA/regulatory bodies yêu cầu explainability cho AI y tế
+           - Tránh "black box" models
+        
+        ### So với các phương pháp khác:
+        
+        | Method | Pros | Cons |
+        |--------|------|------|
+        | **Grad-CAM** | ✓ Class-specific<br>✓ Dễ hiểu<br>✓ Resolution vừa phải | ✗ Coarse localization |
+        | LIME | ✓ Model-agnostic | ✗ Slow, không class-specific |
+        | Attention Maps | ✓ High resolution | ✗ Cần architecture change |
+        | Saliency Maps | ✓ Pixel-level | ✗ Noisy, khó interpret |
         """)
 
 else:
-    st.info("Upload ảnh X-quang để xem Grad-CAM visualization")
+    st.info("📤 Upload ảnh X-quang để xem Grad-CAM visualization")
     
     # Example explanation
     st.markdown("---")
-    st.subheader("About Grad-CAM")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 12px; color: white; margin-bottom: 2rem;">
+        <h2 style="margin: 0 0 1rem 0; font-size: 1.8rem;">🔍 Grad-CAM là gì?</h2>
+        <p style="margin: 0; font-size: 1.1rem; line-height: 1.6;">
+            <strong>Gradient-weighted Class Activation Mapping</strong> - Công cụ visualization giúp hiểu model CNN đang "nhìn" vào đâu khi dự đoán.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("""
     ### Grad-CAM hoạt động như thế nào?
