@@ -57,10 +57,10 @@ def apply_clahe(image):
     Useful for enhancing X-ray images
     
     Args:
-        image: PIL Image
+        image: PIL Image (should be grayscale)
     
     Returns:
-        PIL Image
+        PIL Image (grayscale)
     """
     # Convert to grayscale if needed
     img_array = np.array(image.convert('L'))
@@ -69,8 +69,8 @@ def apply_clahe(image):
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     enhanced = clahe.apply(img_array)
     
-    # Convert back to PIL
-    return Image.fromarray(enhanced).convert('RGB')
+    # Convert back to PIL - keep as grayscale for CNN model
+    return Image.fromarray(enhanced)
 
 
 def denoise_image(image, strength=10):

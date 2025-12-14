@@ -101,6 +101,9 @@ def preprocess_image(image, target_size=256):
     
     # Resize with padding to 256x256
     image = resize_with_padding(image, target_size=target_size)
+    # Ensure grayscale after resize
+    if image.mode != 'L':
+        image = image.convert('L')
     
     # Gaussian Blur
     img_array = np.array(image)
@@ -115,11 +118,15 @@ def preprocess_image(image, target_size=256):
     
     # Convert to array and normalize
     img_array = np.array(image)
+    # Ensure grayscale (should be 2D array)
+    if len(img_array.shape) == 3:
+        img_array = img_array[:, :, 0]  # Take first channel if RGB somehow
+    
     img_array = img_array.astype('float32') / 255.0
     
     # Add batch dimension and channel dimension: (1, 256, 256, 1)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = np.expand_dims(img_array, axis=-1)
+    img_array = np.expand_dims(img_array, axis=0)    # (256, 256) -> (1, 256, 256)
+    img_array = np.expand_dims(img_array, axis=-1)   # (1, 256, 256) -> (1, 256, 256, 1)
     
     return img_array
 
@@ -150,6 +157,9 @@ def preprocess_image_with_steps(image, target_size=256):
     
     # Step 3: Resize with padding to 256x256 (SAME AS TRAINING)
     resized_image = resize_with_padding(gray_image, target_size=target_size)
+    # Ensure grayscale after resize
+    if resized_image.mode != 'L':
+        resized_image = resized_image.convert('L')
     steps['resized'] = resized_image.copy()
     
     # Step 4: Apply Gaussian Blur 3x3 (SAME AS TRAINING)
@@ -168,12 +178,16 @@ def preprocess_image_with_steps(image, target_size=256):
     
     # Step 7: Normalize to [0, 1]
     img_array = np.array(clahe_image)
+    # Ensure grayscale (should be 2D array)
+    if len(img_array.shape) == 3:
+        img_array = img_array[:, :, 0]  # Take first channel if RGB somehow
+    
     img_array = img_array.astype('float32') / 255.0
     steps['normalized'] = clahe_image  # Keep PIL format for display
     
     # Add batch and channel dimensions: (1, 256, 256, 1)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array = np.expand_dims(img_array, axis=-1)
+    img_array = np.expand_dims(img_array, axis=0)    # (256, 256) -> (1, 256, 256)
+    img_array = np.expand_dims(img_array, axis=-1)   # (1, 256, 256) -> (1, 256, 256, 1)
     
     return img_array, steps
 
