@@ -153,6 +153,44 @@ def apply_homomorphic_filter(image, gamma_h=2.0, gamma_l=0.5, c=1.0, cutoff=30):
     return Image.fromarray(img_normalized)
 
 
+def resize_with_padding(image, target_size=256):
+    """
+    Resize image with padding to maintain aspect ratio (same as training script)
+    
+    Args:
+        image: PIL Image
+        target_size: Target size (square)
+    
+    Returns:
+        PIL Image
+    """
+    # Convert PIL to numpy for OpenCV processing
+    img_array = np.array(image)
+    
+    h, w = img_array.shape[:2]
+    scale = target_size / max(h, w)
+
+    new_h = int(h * scale)
+    new_w = int(w * scale)
+
+    resized = cv2.resize(img_array, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+    # Calculate padding
+    pad_h = target_size - new_h
+    pad_w = target_size - new_w
+
+    top = pad_h // 2
+    bottom = pad_h - top
+    left = pad_w // 2
+    right = pad_w - left
+
+    # Add padding
+    padded = cv2.copyMakeBorder(resized, top, bottom, left, right,
+                              cv2.BORDER_CONSTANT, value=0)
+    
+    return Image.fromarray(padded)
+
+
 def resize_with_aspect_ratio(image, target_size=224):
     """
     Resize image while maintaining aspect ratio

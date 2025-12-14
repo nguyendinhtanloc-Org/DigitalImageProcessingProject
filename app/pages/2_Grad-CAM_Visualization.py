@@ -89,14 +89,16 @@ if uploaded_file is not None:
                     # Select model
                     model = st.session_state.cnn_model if model_choice == "CNN" else st.session_state.resnet_model
                     
-                    # Preprocess image (same as main app)
+                    # Import preprocessing from main app
+                    sys.path.insert(0, str(Path(__file__).parent.parent))
+                    from app import preprocess_image
+                    
+                    # Preprocess image (MUST use same pipeline as training)
                     if model_choice == "CNN":
-                        # CNN: 144x144 grayscale
-                        img_resized = image.convert('L').resize((144, 144))
-                        img_array = np.array(img_resized) / 255.0
-                        img_array = np.expand_dims(np.expand_dims(img_array, 0), -1)
+                        # CNN: 256x256 grayscale with full preprocessing pipeline
+                        img_array = preprocess_image(image, target_size=256)
                     else:
-                        # ResNet: 224x224 RGB
+                        # ResNet: 224x224 RGB (different preprocessing)
                         img_resized = image.convert('RGB').resize((224, 224))
                         img_array = np.array(img_resized) / 255.0
                         img_array = np.expand_dims(img_array, axis=0)
@@ -253,10 +255,10 @@ if uploaded_file is not None:
         - yc = score của class c (predicted class)
         ```
         
-        ### Tại sao heatmap có độ phân giải thấp (18×18)?
+        ### Tại sao heatmap có độ phân giải thấp (32×32)?
         
-        - Last Conv2D layer của model có output shape: **18×18×256**
-        - Input: 144×144 → qua 4 MaxPooling (÷2 mỗi lần) → 144÷8 = 18
+        - Last Conv2D layer của model có output shape: **32×32×256**
+        - Input: 256×256 → qua 4 MaxPooling (÷2 mỗi lần) → 256÷16 = 16 (or 32 depending on architecture)
         - Sau đó được **resize lên** kích thước ảnh gốc để overlay
         - Pixelation là bình thường - cho thấy "field of view" của conv layers
         """)
