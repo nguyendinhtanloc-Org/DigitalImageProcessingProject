@@ -176,17 +176,49 @@ def create_comparison_table(cnn_metrics, resnet_metrics):
         HTML table string
     """
     html = """
-    <table style='width:100%; border-collapse: collapse; margin: 1rem 0;'>
-        <thead>
-            <tr style='background-color: #f1f5f9;'>
-                <th style='padding: 0.75rem; text-align: left; border: 1px solid #e2e8f0;'>Metric</th>
-                <th style='padding: 0.75rem; text-align: center; border: 1px solid #e2e8f0;'>CNN</th>
-                <th style='padding: 0.75rem; text-align: center; border: 1px solid #e2e8f0;'>ResNet-50</th>
-                <th style='padding: 0.75rem; text-align: center; border: 1px solid #e2e8f0;'>Winner</th>
-            </tr>
-        </thead>
-        <tbody>
-    """
+<style>
+    .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5rem 0;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .comparison-table thead tr {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    }
+    .comparison-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #1e293b;
+        border-bottom: 2px solid #cbd5e1;
+    }
+    .comparison-table td {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .comparison-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+    .winner-cell {
+        font-weight: 700;
+        color: #0066CC;
+    }
+</style>
+<table class="comparison-table">
+    <thead>
+        <tr>
+            <th style="text-align: left;">Metric</th>
+            <th style="text-align: center;">CNN</th>
+            <th style="text-align: center;">ResNet-50</th>
+            <th style="text-align: center;">Winner</th>
+        </tr>
+    </thead>
+    <tbody>
+"""
     
     metrics = ['accuracy', 'precision', 'recall', 'f1_score']
     labels = ['Accuracy', 'Precision', 'Recall', 'F1 Score']
@@ -195,21 +227,20 @@ def create_comparison_table(cnn_metrics, resnet_metrics):
         cnn_val = cnn_metrics.get(metric, 0)
         resnet_val = resnet_metrics.get(metric, 0)
         winner = 'CNN' if cnn_val > resnet_val else 'ResNet-50'
-        winner_class = 'winner-cnn' if cnn_val > resnet_val else 'winner-resnet'
         
         html += f"""
-            <tr>
-                <td style='padding: 0.75rem; border: 1px solid #e2e8f0;'>{label}</td>
-                <td style='padding: 0.75rem; text-align: center; border: 1px solid #e2e8f0;'>{cnn_val:.2%}</td>
-                <td style='padding: 0.75rem; text-align: center; border: 1px solid #e2e8f0;'>{resnet_val:.2%}</td>
-                <td style='padding: 0.75rem; text-align: center; border: 1px solid #e2e8f0; font-weight: 600; color: #0066CC;'>{winner}</td>
-            </tr>
-        """
+        <tr>
+            <td><strong>{label}</strong></td>
+            <td style="text-align: center;">{cnn_val:.1%}</td>
+            <td style="text-align: center;">{resnet_val:.1%}</td>
+            <td style="text-align: center;" class="winner-cell">{winner}</td>
+        </tr>
+"""
     
     html += """
-        </tbody>
-    </table>
-    """
+    </tbody>
+</table>
+"""
     
     return html
 
@@ -231,26 +262,15 @@ def create_metrics_cards(accuracy, precision, recall, f1_score):
         ('F1 Score', f1_score, '#8b5cf6')
     ]
     
-    cards_html = "<div style='display: flex; gap: 1rem; margin: 1rem 0;'>"
+    cards_html = "<div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1rem 0;'>"
     
     for name, value, color in metrics:
         cards_html += f"""
-        <div style='
-            flex: 1;
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid {color};
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        '>
-            <div style='color: #64748b; font-size: 0.875rem; margin-bottom: 0.5rem;'>
-                {name}
-            </div>
-            <div style='color: {color}; font-size: 1.5rem; font-weight: bold;'>
-                {value:.2%}
-            </div>
-        </div>
-        """
+<div style="background: white; padding: 1.2rem; border-radius: 10px; border-left: 4px solid {color}; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center;">
+    <div style="color: #64748b; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">{name}</div>
+    <div style="color: {color}; font-size: 2rem; font-weight: 700;">{value:.1%}</div>
+</div>
+"""
     
     cards_html += "</div>"
     return cards_html

@@ -93,9 +93,9 @@ def load_models():
 
 def preprocess_image(image, target_size=(224, 224)):
     """Preprocess image for model prediction"""
-    # Convert to RGB if needed
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
+    # Convert to grayscale (CNN model expects 1 channel)
+    if image.mode != 'L':
+        image = image.convert('L')
     
     # Resize
     image = image.resize(target_size)
@@ -103,7 +103,10 @@ def preprocess_image(image, target_size=(224, 224)):
     # Convert to array and normalize
     img_array = np.array(image)
     img_array = img_array / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+    
+    # Add batch dimension and channel dimension
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    img_array = np.expand_dims(img_array, axis=-1)  # Add channel dimension (224, 224, 1)
     
     return img_array
 
