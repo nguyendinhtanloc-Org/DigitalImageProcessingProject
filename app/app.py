@@ -110,6 +110,52 @@ def preprocess_image(image, target_size=(144, 144)):
     
     return img_array
 
+
+def preprocess_image_with_steps(image, target_size=(144, 144)):
+    """
+    Preprocess image and return intermediate steps for visualization
+    
+    Returns:
+        tuple: (final_array, steps_dict)
+        steps_dict contains PIL Images at each preprocessing step
+    """
+    from utils.image_processing import apply_clahe, apply_homomorphic_filter
+    
+    steps = {}
+    
+    # Step 1: Original
+    steps['original'] = image.copy()
+    
+    # Step 2: Convert to grayscale
+    if image.mode != 'L':
+        gray_image = image.convert('L')
+    else:
+        gray_image = image
+    steps['grayscale'] = gray_image.copy()
+    
+    # Step 3: Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+    clahe_image = apply_clahe(gray_image)
+    steps['clahe'] = clahe_image.copy()
+    
+    # Step 4: Apply Homomorphic Filter (illumination normalization)
+    homomorphic_image = apply_homomorphic_filter(clahe_image)
+    steps['homomorphic'] = homomorphic_image.copy()
+    
+    # Step 5: Resize to model input size
+    resized_image = homomorphic_image.resize(target_size)
+    steps['resized'] = resized_image.copy()
+    
+    # Step 6: Normalize to [0, 1]
+    img_array = np.array(resized_image)
+    img_array = img_array / 255.0
+    steps['normalized'] = resized_image  # Keep PIL format for display
+    
+    # Add batch and channel dimensions
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = np.expand_dims(img_array, axis=-1)
+    
+    return img_array, steps
+
 def predict(model, image_array):
     """Make prediction"""
     prediction = model.predict(image_array, verbose=0)
@@ -260,9 +306,9 @@ if uploaded_file is not None:
             st.info("Predictions disabled - models not available")
             st.write("**Demo Mode:** Upload working, but predictions require trained models.")
         else:
-            # Preprocess
+            # Preprocess with visualization
             with st.spinner("Đang xử lý ảnh..."):
-                processed_image = preprocess_image(image)
+                processed_image, preprocessing_steps = preprocess_image_with_steps(image)
             
             # Select model
             selected_model = cnn_model if model_choice == "CNN" else resnet_model
@@ -316,6 +362,68 @@ if uploaded_file is not None:
                             padding: 1rem; border-radius: 12px; margin: 1rem 0; border-left: 4px solid #00C853;">
                     <p style="margin: 0; color: #2E7D32; font-weight: 600;">Kết quả</p>
                     <p style="margin: 0.5rem 0 0 0; color: #1B5E20;">Không phát hiện dấu hiệu bất thường.</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # Preprocessing Pipeline Visualization
+            st.markdown("---")
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; color: white; margin: 1.5rem 0;">
+                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">🔬 Preprocessing Pipeline</h3>
+                <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">Xem các bước xử lý ảnh trước khi đưa vào model</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.expander("📊 Xem chi tiết từng bước preprocessing", expanded=False):
+                st.markdown("""
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+                    Pipeline này áp dụng các kỹ thuật tiền xử lý để tăng chất lượng ảnh và chuẩn hóa input cho model.
+                </p>
+                """, unsafe_allow_html=True)
+                
+                # Display steps in a grid
+                step_info = [
+                    ("original", "📷 Original", "Ảnh gốc được upload", "#E3F2FD"),
+                    ("grayscale", "⚫ Grayscale", "Convert sang ảnh xám (1 channel)", "#F3E5F5"),
+                    ("clahe", "📈 CLAHE", "Contrast Limited Adaptive Histogram Equalization - Tăng độ tương phản", "#FFF3E0"),
+                    ("homomorphic", "💡 Homomorphic Filter", "Cân bằng illumination - Loại bỏ ảnh hưởng ánh sáng không đều", "#E8F5E9"),
+                    ("resized", "🔳 Resize", f"Resize về {target_size[0]}×{target_size[1]} pixels (model input size)", "#FCE4EC"),
+                    ("normalized", "📊 Normalized", "Normalize giá trị pixel về [0, 1] range", "#E0F2F1")
+                ]
+                
+                # Display in 2 columns per row
+                for i in range(0, len(step_info), 2):
+                    cols = st.columns(2)
+                    
+                    for idx, col in enumerate(cols):
+                        if i + idx < len(step_info):
+                            step_key, title, description, bg_color = step_info[i + idx]
+                            
+                            with col:
+                                st.markdown(f"""
+                                <div style="background: {bg_color}; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; text-align: center;">
+                                    <h4 style="margin: 0; color: #333; font-size: 1rem;">{title}</h4>
+                                    <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.8rem;">{description}</p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                if step_key in preprocessing_steps:
+                                    st.image(preprocessing_steps[step_key], use_container_width=True)
+                                else:
+                                    st.info(f"Step {step_key} not available")
+                
+                # Summary
+                st.markdown("---")
+                st.markdown("""
+                <div style="background: #F8F9FA; padding: 1rem; border-radius: 8px; border-left: 4px solid #0066CC;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #0066CC;">📝 Tóm tắt Pipeline</h4>
+                    <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.8; color: #444;">
+                        <li><strong>Grayscale Conversion:</strong> Giảm số chiều từ RGB (3 channels) xuống 1 channel</li>
+                        <li><strong>CLAHE:</strong> Tăng độ tương phản local, làm nổi bật chi tiết trong lung regions</li>
+                        <li><strong>Homomorphic Filter:</strong> Loại bỏ uneven lighting, normalize illumination</li>
+                        <li><strong>Resize:</strong> Chuẩn hóa kích thước theo yêu cầu của CNN model (144×144)</li>
+                        <li><strong>Normalization:</strong> Scale pixel values từ [0, 255] về [0, 1] cho neural network</li>
+                    </ol>
                 </div>
                 """, unsafe_allow_html=True)
 
