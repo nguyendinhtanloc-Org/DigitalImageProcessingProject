@@ -387,7 +387,7 @@ if uploaded_file is not None:
                     ("grayscale", "⚫ Grayscale", "Convert sang ảnh xám (1 channel)", "#F3E5F5"),
                     ("clahe", "📈 CLAHE", "Contrast Limited Adaptive Histogram Equalization - Tăng độ tương phản", "#FFF3E0"),
                     ("homomorphic", "💡 Homomorphic Filter", "Cân bằng illumination - Loại bỏ ảnh hưởng ánh sáng không đều", "#E8F5E9"),
-                    ("resized", "🔳 Resize", f"Resize về {target_size[0]}×{target_size[1]} pixels (model input size)", "#FCE4EC"),
+                    ("resized", "🔳 Resize", "Resize về 144×144 pixels (model input size)", "#FCE4EC"),
                     ("normalized", "📊 Normalized", "Normalize giá trị pixel về [0, 1] range", "#E0F2F1")
                 ]
                 
