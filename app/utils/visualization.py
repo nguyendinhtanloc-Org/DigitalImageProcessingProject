@@ -21,8 +21,8 @@ def generate_gradcam_heatmap(model, img_array, last_conv_layer_name=None):
     Returns:
         heatmap: numpy array of heatmap
     """
-    # Ensure model is built by making a prediction first
-    # This initializes all layers and their outputs
+    # For Sequential models, we need to build it first
+    # Call the model once to ensure all layers are built
     _ = model(img_array, training=False)
     
     # Auto-detect last conv layer if not specified
@@ -39,11 +39,32 @@ def generate_gradcam_heatmap(model, img_array, last_conv_layer_name=None):
     # Get the last conv layer
     last_conv_layer = model.get_layer(last_conv_layer_name)
     
-    # Create a model that maps input to last conv layer output and final predictions
-    grad_model = keras.models.Model(
-        inputs=model.input,
-        outputs=[last_conv_layer.output, model.output]
-    )
+    # For Sequential models, create a new functional model
+    # This avoids the "has never been called" error
+    try:
+        # Try standard approach first
+        grad_model = keras.models.Model(
+            inputs=model.input,
+            outputs=[last_conv_layer.output, model.output]
+        )
+    except AttributeError:
+        # If model.input fails (Sequential model issue), use alternative approach
+        # Create a new input tensor with the expected shape
+        input_shape = img_array.shape[1:]  # Remove batch dimension
+        new_input = keras.Input(shape=input_shape)
+        
+        # Pass through the model
+        x = new_input
+        for layer in model.layers:
+            x = layer(x)
+            if layer.name == last_conv_layer_name:
+                conv_output = x
+        
+        # Create functional model
+        grad_model = keras.models.Model(
+            inputs=new_input,
+            outputs=[conv_output, x]
+        )
     
     # Compute gradient using GradientTape
     with tf.GradientTape() as tape:
