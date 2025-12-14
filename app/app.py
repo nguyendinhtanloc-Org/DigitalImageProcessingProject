@@ -445,8 +445,8 @@ if uploaded_file is not None:
                             """, unsafe_allow_html=True)
                             
                             if step_key in preprocessing_steps:
-                                # Use fixed width for compact display
-                                st.image(preprocessing_steps[step_key], width=200)
+                                # Use container width for clear, responsive display
+                                st.image(preprocessing_steps[step_key], use_container_width=True)
                             else:
                                 st.caption(f"Step {step_key} not available")
             
