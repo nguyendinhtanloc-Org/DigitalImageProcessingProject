@@ -2,6 +2,16 @@
 ## Ignore files cho Python, Java/Spring Boot, React, và AI/ML models
 
 # ===========================
+# macOS System Files
+# ===========================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ===========================
 # Python & ML Models
 # ===========================
 __pycache__/
