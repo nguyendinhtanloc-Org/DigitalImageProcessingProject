@@ -128,9 +128,17 @@ with tab2:
     # Comparison table
     st.markdown("---")
     st.subheader("Side-by-Side Comparison")
-    st.markdown(
-        create_comparison_table(cnn_metrics, resnet_metrics),
-        unsafe_allow_html=True
+    
+    comparison_df = create_comparison_table(cnn_metrics, resnet_metrics)
+    
+    # Style the dataframe with custom CSS
+    def highlight_winner(row):
+        return ['background-color: #E3F2FD' if row['Winner'] == 'CNN' else 'background-color: #FFF3E0' for _ in row]
+    
+    st.dataframe(
+        comparison_df,
+        use_container_width=True,
+        hide_index=True
     )
     
     # Conclusion

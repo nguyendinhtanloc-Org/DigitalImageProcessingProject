@@ -166,88 +166,35 @@ def plot_training_history(history_dict):
 
 def create_comparison_table(cnn_metrics, resnet_metrics):
     """
-    Create model comparison table
+    Create model comparison table using Streamlit dataframe
     
     Args:
         cnn_metrics: Dict with CNN metrics
         resnet_metrics: Dict with ResNet metrics
     
     Returns:
-        HTML table string
+        Pandas DataFrame for display
     """
-    html = """
-<style>
-    .model-comparison-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1.5rem 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    .model-comparison-table thead {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-    .model-comparison-table th {
-        padding: 12px 16px;
-        font-weight: 600;
-        text-align: center;
-    }
-    .model-comparison-table td {
-        padding: 10px 16px;
-        border-bottom: 1px solid #e2e8f0;
-        text-align: center;
-    }
-    .model-comparison-table tbody tr:nth-child(even) {
-        background-color: #f7fafc;
-    }
-    .model-comparison-table tbody tr:hover {
-        background-color: #edf2f7;
-    }
-    .metric-label {
-        font-weight: 600;
-        color: #2d3748;
-        text-align: left !important;
-    }
-    .winner-cell {
-        font-weight: 700;
-        color: #0066CC;
-    }
-</style>
-<table class="model-comparison-table">
-    <thead>
-        <tr>
-            <th style="text-align: left;">Metric</th>
-            <th>CNN</th>
-            <th>ResNet-50</th>
-            <th>Winner</th>
-        </tr>
-    </thead>
-    <tbody>
-"""
+    import pandas as pd
     
     metrics = ['accuracy', 'precision', 'recall', 'f1_score']
     labels = ['Accuracy', 'Precision', 'Recall', 'F1 Score']
     
+    data = []
     for metric, label in zip(metrics, labels):
         cnn_val = cnn_metrics.get(metric, 0)
         resnet_val = resnet_metrics.get(metric, 0)
         winner = 'CNN' if cnn_val > resnet_val else 'ResNet-50'
         
-        html += f"""
-        <tr>
-            <td class="metric-label">{label}</td>
-            <td>{cnn_val:.1%}</td>
-            <td>{resnet_val:.1%}</td>
-            <td class="winner-cell">{winner}</td>
-        </tr>
-"""
+        data.append({
+            'Metric': label,
+            'CNN': f"{cnn_val:.1%}",
+            'ResNet-50': f"{resnet_val:.1%}",
+            'Winner': winner
+        })
     
-    html += """
-    </tbody>
-</table>
-"""
-    
-    return html
+    df = pd.DataFrame(data)
+    return df
 
 
 def create_metrics_cards(accuracy, precision, recall, f1_score):
