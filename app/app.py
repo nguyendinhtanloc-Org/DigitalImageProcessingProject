@@ -399,74 +399,75 @@ if uploaded_file is not None:
                     <p style="margin: 0.5rem 0 0 0; color: #1B5E20;">Không phát hiện dấu hiệu bất thường.</p>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            # Preprocessing Pipeline Visualization
-            st.markdown("---")
+    
+    # Preprocessing Pipeline Visualization - MOVED OUTSIDE columns for full width display
+    if models_ready:
+        st.markdown("---")
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; color: white; margin: 1.5rem 0;">
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">🔬 Preprocessing Pipeline</h3>
+            <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">Xem các bước xử lý ảnh trước khi đưa vào model</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.expander("📊 Xem chi tiết từng bước preprocessing", expanded=False):
             st.markdown("""
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; color: white; margin: 1.5rem 0;">
-                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">🔬 Preprocessing Pipeline</h3>
-                <p style="margin: 0; font-size: 0.95rem; opacity: 0.9;">Xem các bước xử lý ảnh trước khi đưa vào model</p>
-            </div>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+                Pipeline này áp dụng các kỹ thuật tiền xử lý để tăng chất lượng ảnh và chuẩn hóa input cho model.
+            </p>
             """, unsafe_allow_html=True)
             
-            with st.expander("📊 Xem chi tiết từng bước preprocessing", expanded=False):
-                st.markdown("""
-                <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
-                    Pipeline này áp dụng các kỹ thuật tiền xử lý để tăng chất lượng ảnh và chuẩn hóa input cho model.
-                </p>
-                """, unsafe_allow_html=True)
+            # Display steps in a grid (3 columns for compact layout)
+            step_info = [
+                ("original", "📷 Original", "Ảnh gốc được upload", "#E3F2FD"),
+                ("grayscale", "⚫ Grayscale", "Convert sang ảnh xám (1 channel)", "#F3E5F5"),
+                ("resized", "🔳 Resize", "Resize về 144×144 pixels với padding (giữ nguyên tỷ lệ)", "#FCE4EC"),
+                ("blurred", "🌫️ Gaussian Blur", "Làm mịn ảnh với kernel 3×3 - Giảm noise", "#E1F5FE"),
+                ("homomorphic", "💡 Homomorphic Filter", "Cân bằng illumination - Loại bỏ ảnh hưởng ánh sáng không đều", "#E8F5E9"),
+                ("clahe", "📈 CLAHE", "Contrast Limited Adaptive Histogram Equalization - Tăng độ tương phản", "#FFF3E0"),
+                ("normalized", "📊 Normalized", "Normalize giá trị pixel về [0, 1] range", "#E0F2F1")
+            ]
+            
+            # Display in 3 columns per row for more compact layout
+            for i in range(0, len(step_info), 3):
+                cols = st.columns(3)
                 
-                # Display steps in a grid (3 columns for compact layout)
-                step_info = [
-                    ("original", "📷 Original", "Ảnh gốc được upload", "#E3F2FD"),
-                    ("grayscale", "⚫ Grayscale", "Convert sang ảnh xám (1 channel)", "#F3E5F5"),
-                    ("resized", "🔳 Resize", "Resize về 144×144 pixels với padding (giữ nguyên tỷ lệ)", "#FCE4EC"),
-                    ("blurred", "🌫️ Gaussian Blur", "Làm mịn ảnh với kernel 3×3 - Giảm noise", "#E1F5FE"),
-                    ("homomorphic", "💡 Homomorphic Filter", "Cân bằng illumination - Loại bỏ ảnh hưởng ánh sáng không đều", "#E8F5E9"),
-                    ("clahe", "📈 CLAHE", "Contrast Limited Adaptive Histogram Equalization - Tăng độ tương phản", "#FFF3E0"),
-                    ("normalized", "📊 Normalized", "Normalize giá trị pixel về [0, 1] range", "#E0F2F1")
-                ]
-                
-                # Display in 3 columns per row for more compact layout
-                for i in range(0, len(step_info), 3):
-                    cols = st.columns(3)
-                    
-                    for idx, col in enumerate(cols):
-                        if i + idx < len(step_info):
-                            step_key, title, description, bg_color = step_info[i + idx]
+                for idx, col in enumerate(cols):
+                    if i + idx < len(step_info):
+                        step_key, title, description, bg_color = step_info[i + idx]
+                        
+                        with col:
+                            st.markdown(f"""
+                            <div style="background: {bg_color}; padding: 0.5rem; border-radius: 8px; margin-bottom: 0.5rem; text-align: center;">
+                                <h4 style="margin: 0; color: #333; font-size: 0.9rem;">{title}</h4>
+                                <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.75rem; line-height: 1.3;">{description}</p>
+                            </div>
+                            """, unsafe_allow_html=True)
                             
-                            with col:
-                                st.markdown(f"""
-                                <div style="background: {bg_color}; padding: 0.5rem; border-radius: 8px; margin-bottom: 0.5rem; text-align: center;">
-                                    <h4 style="margin: 0; color: #333; font-size: 0.9rem;">{title}</h4>
-                                    <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.75rem; line-height: 1.3;">{description}</p>
-                                </div>
-                                """, unsafe_allow_html=True)
-                                
-                                if step_key in preprocessing_steps:
-                                    # Use fixed width for compact display
-                                    st.image(preprocessing_steps[step_key], width=200)
-                                else:
-                                    st.caption(f"Step {step_key} not available")
-                
-                # Summary - more compact
-                st.markdown("---")
-                st.markdown("""
-                <div style="background: #F8F9FA; padding: 0.75rem; border-radius: 8px; border-left: 4px solid #0066CC;">
-                    <h4 style="margin: 0 0 0.5rem 0; color: #0066CC; font-size: 1rem;">📝 Tóm tắt Pipeline</h4>
-                    <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.85rem;">
-                        Pipeline cho CNN model (input: 144×144)
-                    </p>
-                    <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.6; color: #444; font-size: 0.85rem;">
-                        <li><strong>Grayscale:</strong> RGB → 1 channel</li>
-                        <li><strong>Resize:</strong> 144×144 với padding</li>
-                        <li><strong>Gaussian Blur:</strong> Giảm noise (3×3)</li>
-                        <li><strong>Homomorphic:</strong> Cân bằng ánh sáng (d0=30)</li>
-                        <li><strong>CLAHE:</strong> Tăng contrast (clip=2.0)</li>
-                        <li><strong>Normalize:</strong> [0,255] → [0,1]</li>
-                    </ol>
-                </div>
-                """, unsafe_allow_html=True)
+                            if step_key in preprocessing_steps:
+                                # Use fixed width for compact display
+                                st.image(preprocessing_steps[step_key], width=200)
+                            else:
+                                st.caption(f"Step {step_key} not available")
+            
+            # Summary - more compact
+            st.markdown("---")
+            st.markdown("""
+            <div style="background: #F8F9FA; padding: 0.75rem; border-radius: 8px; border-left: 4px solid #0066CC;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #0066CC; font-size: 1rem;">📝 Tóm tắt Pipeline</h4>
+                <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.85rem;">
+                    Pipeline cho CNN model (input: 144×144)
+                </p>
+                <ol style="margin: 0; padding-left: 1.5rem; line-height: 1.6; color: #444; font-size: 0.85rem;">
+                    <li><strong>Grayscale:</strong> RGB → 1 channel</li>
+                    <li><strong>Resize:</strong> 144×144 với padding</li>
+                    <li><strong>Gaussian Blur:</strong> Giảm noise (3×3)</li>
+                    <li><strong>Homomorphic:</strong> Cân bằng ánh sáng (d0=30)</li>
+                    <li><strong>CLAHE:</strong> Tăng contrast (clip=2.0)</li>
+                    <li><strong>Normalize:</strong> [0,255] → [0,1]</li>
+                </ol>
+            </div>
+            """, unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
