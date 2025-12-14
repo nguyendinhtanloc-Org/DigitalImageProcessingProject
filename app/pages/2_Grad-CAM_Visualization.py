@@ -71,6 +71,10 @@ if uploaded_file is not None:
     # Load and display image
     image = Image.open(uploaded_file)
     
+    # Clear any cached matplotlib figures to prevent stale display
+    import matplotlib.pyplot as plt
+    plt.close('all')
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -97,6 +101,16 @@ if uploaded_file is not None:
                     if model_choice == "CNN":
                         # CNN: 144x144 grayscale with full preprocessing pipeline
                         img_array = preprocess_image(image, target_size=144)
+                        
+                        # Debug: show input shape and test prediction
+                        st.caption(f"Input shape: {img_array.shape}")
+                        
+                        # Test prediction BEFORE Grad-CAM
+                        test_pred = model.predict(img_array, verbose=0)
+                        st.caption(f"🔍 Model prediction: {test_pred[0][0]:.4f} (0=Normal, 1=Pneumonia)")
+                        
+                        if test_pred[0][0] < 0.01 or test_pred[0][0] > 0.99:
+                            st.warning("⚠️ Model is very confident (near 0 or 1). This may produce weak gradients.")
                     else:
                         # ResNet: 224x224 RGB (different preprocessing)
                         img_resized = image.convert('RGB').resize((224, 224))
@@ -106,15 +120,35 @@ if uploaded_file is not None:
                     # Generate heatmap (model will be built inside this function)
                     heatmap = generate_gradcam_heatmap(model, img_array)
                     
-                    # Display heatmap
+                    # Debug: show heatmap stats
+                    st.caption(f"Debug: Heatmap shape={heatmap.shape}, range=[{heatmap.min():.4f}, {heatmap.max():.4f}]")
+                    
+                    # Check if heatmap is valid
+                    if heatmap.max() == 0:
+                        st.error("⚠️ Heatmap is all zeros! Model may not be making confident predictions.")
+                        st.info("This can happen if preprocessing doesn't match training data.")
+                    
+                    # Display heatmap with explicit figure
                     import matplotlib.pyplot as plt
-                    fig, ax = plt.subplots()
-                    ax.imshow(heatmap, cmap='jet')
+                    import matplotlib
+                    matplotlib.use('Agg')  # Use non-interactive backend
+                    
+                    fig, ax = plt.subplots(figsize=(6, 6), dpi=100)
+                    im = ax.imshow(heatmap, cmap='jet', vmin=0, vmax=1, aspect='auto')
+                    ax.set_title("Grad-CAM Activation Map", fontsize=14, pad=10)
                     ax.axis('off')
-                    st.pyplot(fig)
+                    cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+                    cbar.set_label('Activation', rotation=270, labelpad=15)
+                    plt.tight_layout()
+                    
+                    # Display with container
+                    st.pyplot(fig, use_container_width=False, clear_figure=True)
+                    plt.close('all')  # Ensure all figures are closed
                     
                 except Exception as e:
                     st.error(f"Error generating Grad-CAM: {e}")
+                    import traceback
+                    st.code(traceback.format_exc())
         else:
             st.warning("Visualization utilities not available")
     

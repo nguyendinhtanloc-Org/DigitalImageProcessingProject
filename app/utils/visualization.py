@@ -39,47 +39,110 @@ def generate_gradcam_heatmap(model, img_array, last_conv_layer_name=None):
     # Get the last conv layer
     last_conv_layer = model.get_layer(last_conv_layer_name)
     
-    # For Sequential models, create a new functional model
-    # This avoids the "has never been called" error
+    # CRITICAL: Remove sigmoid activation from final Dense layer to get raw logits
+    # This prevents gradient saturation when prediction is 0.0 or 1.0
+    # Find and clone the model without final activation
     try:
-        # Try standard approach first
-        grad_model = keras.models.Model(
-            inputs=model.input,
-            outputs=[last_conv_layer.output, model.output]
-        )
-    except AttributeError:
-        # If model.input fails (Sequential model issue), use alternative approach
-        # Create a new input tensor with the expected shape
-        input_shape = img_array.shape[1:]  # Remove batch dimension
-        new_input = keras.Input(shape=input_shape)
+        # Method 1: Try to access Dense layer and remove activation
+        dense_layers = [l for l in model.layers if isinstance(l, keras.layers.Dense) and l.units == 1]
         
-        # Pass through the model
-        x = new_input
-        for layer in model.layers:
-            x = layer(x)
-            if layer.name == last_conv_layer_name:
-                conv_output = x
-        
-        # Create functional model
-        grad_model = keras.models.Model(
-            inputs=new_input,
-            outputs=[conv_output, x]
-        )
+        if dense_layers:
+            final_dense = dense_layers[-1]
+            
+            # Create a new model that outputs logits (before sigmoid)
+            # We'll construct functional model without final activation
+            input_shape = img_array.shape[1:]
+            new_input = keras.Input(shape=input_shape)
+            
+            x = new_input
+            conv_output = None
+            logit_output = None
+            
+            for layer in model.layers[:-1]:  # All layers except last Dense
+                if isinstance(layer, keras.layers.Dropout):
+                    x = layer(x, training=False)  # Dropout off during inference
+                else:
+                    x = layer(x)
+                
+                if layer.name == last_conv_layer_name:
+                    conv_output = x
+            
+            # Add final Dense layer WITHOUT activation
+            logit_output = keras.layers.Dense(1, name='logits_no_activation')(x)
+            
+            # Create grad model
+            grad_model = keras.models.Model(
+                inputs=new_input,
+                outputs=[conv_output, logit_output]
+            )
+            
+            # Copy weights from original Dense layer
+            grad_model.get_layer('logits_no_activation').set_weights(final_dense.get_weights())
+            
+        else:
+            raise ValueError("Cannot find final Dense layer")
+            
+    except Exception as e:
+        print(f"[WARNING] Failed to remove sigmoid: {e}")
+        # Fallback to original approach
+        try:
+            grad_model = keras.models.Model(
+                inputs=model.input,
+                outputs=[last_conv_layer.output, model.output]
+            )
+        except AttributeError:
+            input_shape = img_array.shape[1:]
+            new_input = keras.Input(shape=input_shape)
+            
+            x = new_input
+            conv_output = None
+            
+            for layer in model.layers:
+                x = layer(x)
+                if layer.name == last_conv_layer_name:
+                    conv_output = x
+            
+            grad_model = keras.models.Model(
+                inputs=new_input,
+                outputs=[conv_output, x]
+            )
     
     # Compute gradient using GradientTape
     with tf.GradientTape() as tape:
-        # Forward pass
-        conv_outputs, predictions = grad_model(img_array)
+        # Forward pass - tape will automatically watch trainable variables
+        conv_outputs, logits = grad_model(img_array)
         
-        # Get predicted class
-        pred_index = tf.argmax(predictions[0])
-        class_channel = predictions[:, pred_index]
+        # Watch conv_outputs explicitly for gradient computation
+        tape.watch(conv_outputs)
+        
+        # For saturated predictions, we still compute gradient
+        # Use the raw output value (logits or predictions)
+        class_output = logits[0, 0]
     
-    # Compute gradients of the predicted class wrt conv outputs
-    grads = tape.gradient(class_channel, conv_outputs)
+    # Debug: print predictions
+    print(f"[DEBUG] Logits: {logits.numpy()}")
+    print(f"[DEBUG] Class output value: {class_output.numpy():.4f}")
+    
+    # Compute gradients of output wrt conv outputs
+    # Even if output is saturated, we may still get some gradients from earlier layers
+    grads = tape.gradient(class_output, conv_outputs)
+    
+    # Debug: check gradients
+    if grads is None:
+        print("[ERROR] Gradients are None!")
+        return np.zeros((18, 18))  # Return empty heatmap
+    
+    print(f"[DEBUG] Grads shape: {grads.shape}, min: {tf.reduce_min(grads).numpy():.6f}, max: {tf.reduce_max(grads).numpy():.6f}")
+    
+    # Use ReLU on gradients (only positive gradients)
+    # This helps with saturated activations
+    grads = tf.nn.relu(grads)
+    
+    print(f"[DEBUG] After ReLU - Grads min: {tf.reduce_min(grads).numpy():.6f}, max: {tf.reduce_max(grads).numpy():.6f}")
     
     # Compute guided gradients (average pooling)
     pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    print(f"[DEBUG] Pooled grads min: {tf.reduce_min(pooled_grads).numpy():.6f}, max: {tf.reduce_max(pooled_grads).numpy():.6f}")
     
     # Weight the conv outputs by the gradients
     conv_outputs = conv_outputs[0]
@@ -87,11 +150,17 @@ def generate_gradcam_heatmap(model, img_array, last_conv_layer_name=None):
     heatmap = conv_outputs @ pooled_grads
     heatmap = tf.squeeze(heatmap)
     
+    print(f"[DEBUG] Heatmap before normalize - min: {tf.reduce_min(heatmap).numpy():.4f}, max: {tf.reduce_max(heatmap).numpy():.4f}")
+    
     # Normalize heatmap to [0, 1]
     heatmap = tf.maximum(heatmap, 0)
     max_val = tf.reduce_max(heatmap)
     if max_val > 0:
         heatmap = heatmap / max_val
+    else:
+        print("[WARNING] Heatmap max value is 0! Returning empty heatmap.")
+    
+    print(f"[DEBUG] Final heatmap - min: {tf.reduce_min(heatmap).numpy():.4f}, max: {tf.reduce_max(heatmap).numpy():.4f}")
     
     return heatmap.numpy()
 
