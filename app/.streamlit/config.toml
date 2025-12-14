@@ -12,3 +12,11 @@ magicEnabled = true
 # Browser settings
 showErrorDetails = true
 toolbarMode = "minimal"
+
+[theme]
+# Consistent UI theme across all pages
+primaryColor = "#0066CC"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"

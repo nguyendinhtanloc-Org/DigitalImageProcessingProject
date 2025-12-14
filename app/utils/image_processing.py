@@ -94,6 +94,60 @@ def denoise_image(image, strength=10):
     return Image.fromarray(denoised)
 
 
+def apply_homomorphic_filter(image, gamma_h=2.0, gamma_l=0.5, c=1.0, cutoff=30):
+    """
+    Apply Homomorphic filtering for illumination normalization
+    Useful for X-ray images with uneven lighting
+    
+    Args:
+        image: PIL Image
+        gamma_h: High frequency gain (amplify details)
+        gamma_l: Low frequency gain (suppress illumination)
+        c: Sharpness parameter
+        cutoff: Cutoff frequency
+    
+    Returns:
+        PIL Image
+    """
+    # Convert to grayscale
+    img_array = np.array(image.convert('L'), dtype=np.float32)
+    
+    # Take log transform
+    img_log = np.log1p(img_array)
+    
+    # FFT
+    img_fft = np.fft.fft2(img_log)
+    img_fft_shift = np.fft.fftshift(img_fft)
+    
+    # Create Gaussian high-pass filter
+    rows, cols = img_array.shape
+    crow, ccol = rows // 2, cols // 2
+    
+    # Create meshgrid for distance calculation
+    x = np.arange(-ccol, cols - ccol)
+    y = np.arange(-crow, rows - crow)
+    X, Y = np.meshgrid(x, y)
+    D = np.sqrt(X**2 + Y**2)
+    
+    # Homomorphic filter H(u,v)
+    H = (gamma_h - gamma_l) * (1 - np.exp(-c * (D**2 / cutoff**2))) + gamma_l
+    
+    # Apply filter
+    img_fft_filtered = img_fft_shift * H
+    
+    # Inverse FFT
+    img_ifft = np.fft.ifftshift(img_fft_filtered)
+    img_filtered = np.real(np.fft.ifft2(img_ifft))
+    
+    # Exp to reverse log
+    img_exp = np.expm1(img_filtered)
+    
+    # Normalize to 0-255
+    img_normalized = np.clip(img_exp, 0, 255).astype(np.uint8)
+    
+    return Image.fromarray(img_normalized)
+
+
 def resize_with_aspect_ratio(image, target_size=224):
     """
     Resize image while maintaining aspect ratio

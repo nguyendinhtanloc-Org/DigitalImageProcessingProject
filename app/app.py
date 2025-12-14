@@ -91,13 +91,13 @@ def load_models():
         st.error(f"Error loading models: {e}")
         return None, None
 
-def preprocess_image(image, target_size=(224, 224)):
+def preprocess_image(image, target_size=(144, 144)):
     """Preprocess image for model prediction"""
     # Convert to grayscale (CNN model expects 1 channel)
     if image.mode != 'L':
         image = image.convert('L')
     
-    # Resize
+    # Resize to 144x144 (CNN model input size)
     image = image.resize(target_size)
     
     # Convert to array and normalize
@@ -106,7 +106,7 @@ def preprocess_image(image, target_size=(224, 224)):
     
     # Add batch dimension and channel dimension
     img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
-    img_array = np.expand_dims(img_array, axis=-1)  # Add channel dimension (224, 224, 1)
+    img_array = np.expand_dims(img_array, axis=-1)  # Add channel dimension (144, 144, 1)
     
     return img_array
 
@@ -135,7 +135,9 @@ st.markdown("""
 ### Dự án phân loại ảnh X-quang phổi sử dụng Deep Learning
 **Mục tiêu:** Phát hiện viêm phổi (Pneumonia) từ ảnh X-quang ngực
 
-**Models:** Custom CNN & ResNet-50 Transfer Learning
+**Preprocessing Pipeline:** CLAHE + Homomorphic Filtering + Augmentation  
+**CNN Model:** Custom architecture (144×144 grayscale) - Accuracy: 99.9%  
+**ResNet-50:** Transfer Learning (224×224 RGB, PyTorch) - Đang chuyển đổi sang TensorFlow
 """)
 
 # Load models

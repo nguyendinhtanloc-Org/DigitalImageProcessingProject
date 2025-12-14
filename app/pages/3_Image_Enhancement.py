@@ -15,6 +15,7 @@ try:
         adjust_contrast,
         adjust_sharpness,
         apply_clahe,
+        apply_homomorphic_filter,
         denoise_image
     )
     UTILS_AVAILABLE = True
@@ -85,6 +86,13 @@ if uploaded_file is not None and UTILS_AVAILABLE:
             help="Enhance local contrast (recommended for X-rays)"
         )
         
+        # Homomorphic Filter
+        apply_homo_check = st.checkbox(
+            "Apply Homomorphic Filter",
+            value=False,
+            help="Normalize illumination (used in training pipeline)"
+        )
+        
         # Denoise
         denoise_check = st.checkbox(
             "Denoise",
@@ -128,6 +136,9 @@ if uploaded_file is not None and UTILS_AVAILABLE:
         
         if apply_clahe_check:
             processed_image = apply_clahe(processed_image)
+        
+        if apply_homo_check:
+            processed_image = apply_homomorphic_filter(processed_image)
         
         if denoise_check:
             processed_image = denoise_image(processed_image, denoise_strength)
