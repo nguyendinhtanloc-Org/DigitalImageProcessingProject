@@ -3,8 +3,8 @@ import numpy as np
 from PIL import Image
 import cv2
 
-# Disable TensorFlow for now (enable after models are trained)
-ENABLE_TENSORFLOW = False
+# Enable TensorFlow now that CNN model is available
+ENABLE_TENSORFLOW = True
 
 if ENABLE_TENSORFLOW:
     try:
@@ -80,8 +80,12 @@ def load_models():
         return None, None
     
     try:
-        cnn_model = keras.models.load_model('../models/cnn_best.h5')
-        resnet_model = keras.models.load_model('../models/resnet50_best.h5')
+        # Load CNN model (TensorFlow/Keras format)
+        cnn_model = keras.models.load_model('../models/cnn_pneumonia_model.keras')
+        
+        # ResNet model not available yet (PyTorch format in notebook)
+        resnet_model = None
+        
         return cnn_model, resnet_model
     except Exception as e:
         st.error(f"Error loading models: {e}")
@@ -131,6 +135,23 @@ st.markdown("""
 **Models:** Custom CNN & ResNet-50 Transfer Learning
 """)
 
+# Load models
+cnn_model, resnet_model = load_models()
+
+if not TF_AVAILABLE:
+    st.warning("**TensorFlow không khả dụng!** Vui lòng cài đặt: `pip install tensorflow`")
+    models_ready = False
+elif cnn_model is None:
+    if USE_CUSTOM_UI:
+        show_info_box("CNN model chưa được load! Kiểm tra file model.", type="error")
+    else:
+        st.error("CNN model chưa được load! Kiểm tra file model.")
+    models_ready = False
+else:
+    models_ready = True
+    if resnet_model is None:
+        st.info("**Note:** ResNet model chưa khả dụng (sử dụng PyTorch). Hiện chỉ có CNN model.")
+
 # Sidebar
 with st.sidebar:
     st.markdown("""
@@ -140,11 +161,20 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
     
-    model_choice = st.radio(
-        "Chọn model:",
-        ["CNN", "ResNet-50"],
-        help="CNN: Custom architecture | ResNet-50: Transfer Learning"
-    )
+    # Model selection
+    if resnet_model is None:
+        model_choice = st.radio(
+            "Chọn model:",
+            ["CNN"],
+            help="CNN: Custom architecture (Accuracy: 99.9%)"
+        )
+        st.info("📝 ResNet-50 model đang trong quá trình chuyển đổi từ PyTorch")
+    else:
+        model_choice = st.radio(
+            "Chọn model:",
+            ["CNN", "ResNet-50"],
+            help="CNN: Custom architecture | ResNet-50: Transfer Learning"
+        )
     
     st.markdown("---")
     
@@ -165,30 +195,6 @@ with st.sidebar:
         </p>
     </div>
     """, unsafe_allow_html=True)
-
-# Load models
-cnn_model, resnet_model = load_models()
-
-if not TF_AVAILABLE:
-    st.warning("**Demo Mode:** TensorFlow disabled for testing. Enable in code after training models.")
-    st.info("""
-    **Hướng dẫn kích hoạt dự đoán:**
-    1. Train models trên Kaggle (CNN.ipynb & ResNet.ipynb)
-    2. Download `cnn_best.h5` & `resnet50_best.h5` 
-    3. Đặt vào thư mục `models/`
-    4. Set `ENABLE_TENSORFLOW = True` trong app.py (line 7)
-    """)
-    models_ready = False
-elif cnn_model is None or resnet_model is None:
-    if USE_CUSTOM_UI:
-        show_info_box("Models chưa được train! Vui lòng train models trước.", type="error")
-        show_info_box("Hướng dẫn: Chạy notebooks/CNN.ipynb và notebooks/ResNet.ipynb trên Kaggle để train models.", type="info")
-    else:
-        st.error("Models chưa được train! Vui lòng train models trước.")
-        st.info("Hướng dẫn: Chạy notebooks/CNN.ipynb và notebooks/ResNet.ipynb trên Kaggle để train models.")
-    models_ready = False
-else:
-    models_ready = True
 
 # File uploader
 st.markdown("""
